@@ -1,13 +1,13 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/",              "destination": "/Index.html" },
+    { "source": "/",              "destination": "/index.html" },   ✅ was /Index.html
     { "source": "/home",          "destination": "/home.html" },
     { "source": "/user",          "destination": "/User.html" },
     { "source": "/admin",         "destination": "/Admin.html" },
     { "source": "/payment",       "destination": "/Payment.html" },
     { "source": "/adminpayments", "destination": "/AdminPayments.html" },
-    { "source": "/(.*)",          "destination": "/Index.html" }
+    { "source": "/(.*)",          "destination": "/index.html" }    ✅ was /Index.html
   ],
   "headers": [
     { "source": "/(.*)", "headers": [
