@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintShop Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--green:#16a34a;--green-l:#f0fdf4;--amber:#f59e0b;--amber-l:#fffbeb;--red:#dc2626;--red-l:#fef2f2;--purple:#7c3aed;--gray:#6b7280;--gray-l:#f3f4f6;--border:#e5e7eb;--text:#1f2937;--white:#fff;--shadow:0 4px 20px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh}
+/* ── NAV ── */
+nav{background:var(--blue);color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(37,99,235,.4)}
+.nav-brand{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+.nav-menu{display:flex;gap:4px}
+.nav-item{padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:500;transition:background .2s;white-space:nowrap;color:rgba(255,255,255,.85)}
+.nav-item:hover,.nav-item.on{background:rgba(255,255,255,.2);color:#fff}
+.nav-right{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.logout-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:background .2s}
+.logout-btn:hover{background:rgba(255,255,255,.25)}
+/* ── LAYOUT ── */
+.page{padding:24px 20px;max-width:900px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+/* ── CARDS ── */
+.card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.card-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-title{font-size:22px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);text-align:center}
+.stat .s-icon{font-size:28px;margin-bottom:8px}
+.stat .s-val{font-size:28px;font-weight:800;color:var(--blue)}
+.stat .s-lbl{font-size:12px;color:var(--gray);font-weight:500;margin-top:4px}
+/* ── STEP WIZARD ── */
+.steps{display:flex;gap:0;margin-bottom:28px}
+.step{flex:1;text-align:center;position:relative}
+.step::after{content:'';position:absolute;top:16px;left:50%;width:100%;height:2px;background:var(--border);z-index:0}
+.step:last-child::after{display:none}
+.step-circle{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;position:relative;z-index:1;transition:all .3s}
+.step.done .step-circle{background:var(--green);border-color:var(--green);color:#fff}
+.step.active .step-circle{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.2)}
+.step-lbl{font-size:11px;color:var(--gray);margin-top:6px;font-weight:500}
+.step.active .step-lbl{color:var(--blue);font-weight:700}
+/* ── FORMS ── */
+.fg{margin-bottom:18px}
+.fg label{display:block;font-size:12.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;transition:all .2s;background:#fafafa;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.fg textarea{resize:vertical;min-height:70px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* ── TOGGLE ── */
+.toggle-group{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toggle-opt{border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:center}
+.toggle-opt.on{border-color:var(--blue);background:var(--blue-l)}
+.toggle-opt .opt-icon{font-size:24px;display:block;margin-bottom:4px}
+.toggle-opt .opt-title{font-size:13px;font-weight:700}
+.toggle-opt .opt-sub{font-size:11px;color:var(--gray);margin-top:2px}
+/* ── FILE UPLOAD ── */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;position:relative}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:var(--blue-l)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:40px;margin-bottom:10px}
+.upload-text{font-size:14px;color:var(--gray)}
+.upload-text b{color:var(--blue)}
+/* FIX #2: upload-preview — removed conflicting display:none+display:flex, now controlled only by JS */
+.upload-preview{background:#f8fafc;border-radius:10px;padding:14px;align-items:center;gap:12px;margin-top:14px}
+.preview-icon{font-size:28px}
+.preview-info{flex:1;min-width:0}
+.preview-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preview-size{font-size:12px;color:var(--gray);margin-top:2px}
+.remove-file{color:var(--red);cursor:pointer;font-size:20px;flex-shrink:0}
+/* ── PDF CANVAS ── */
+#pdf-preview-area{background:#666;padding:10px;border-radius:10px;text-align:center;margin-top:12px}
+#pdf-canvas{max-width:100%;border-radius:6px}
+.pdf-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;color:#fff;font-size:14px}
+.pdf-nav button{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px}
+/* ── PRICE BOX ── */
+.price-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:14px;padding:18px}
+.price-row{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;color:#374151}
+.price-row.total{border-top:2px solid #93c5fd;margin-top:8px;padding-top:10px;font-size:18px;font-weight:800;color:var(--blue)}
+/* ── BUTTONS ── */
+.btn{padding:12px 20px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover:not(:disabled){background:var(--blue-d);transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.35)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover:not(:disabled){background:#15803d}
+.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--gray)}
+.btn-ghost:hover{background:var(--gray-l)}
+.btn-full{width:100%;justify-content:center}
+.btn-sm{padding:8px 14px;font-size:13px}
+/* ── ORDER CARDS ── */
+.order-card{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:14px;border-left:4px solid var(--border);cursor:pointer;transition:all .2s}
+.order-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.12)}
+.order-card.paid{border-left-color:var(--green)}.order-card.pending{border-left-color:var(--amber)}.order-card.rejected{border-left-color:var(--red)}
+.order-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.order-id{font-weight:800;font-size:15px}
+.badge{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-block}
+.badge-green{background:var(--green-l);color:var(--green)}.badge-amber{background:var(--amber-l);color:#92400e}
+.badge-red{background:var(--red-l);color:var(--red)}.badge-blue{background:var(--blue-l);color:var(--blue)}
+.badge-gray{background:var(--gray-l);color:var(--gray)}.badge-purple{background:#f5f3ff;color:var(--purple)}
+.order-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--gray)}
+.order-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.order-price{font-size:18px;font-weight:800;color:var(--blue)}
+/* ── ALERTS ── */
+.alert{padding:12px 16px;border-radius:10px;font-size:14px;margin-bottom:16px}
+.alert.err{background:var(--red-l);color:var(--red);border:1px solid #fca5a5}
+.alert.ok{background:var(--green-l);color:var(--green);border:1px solid #86efac}
+.alert.info{background:var(--blue-l);color:var(--blue);border:1px solid #93c5fd}
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.spinner-dark{border:2.5px solid rgba(0,0,0,.1);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{text-align:center;padding:50px;color:var(--gray)}
+/* ── STATUS BAR ── */
+.status-bar{display:flex;gap:0;margin:16px 0;overflow-x:auto}
+.sb-step{min-width:80px;text-align:center;position:relative;flex-shrink:0}
+.sb-step::after{content:'';position:absolute;top:12px;left:50%;width:100%;height:2px;background:var(--border)}
+.sb-step:last-child::after{display:none}
+.sb-step.done::after{background:var(--green)}
+.sb-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;position:relative;z-index:1}
+.sb-step.done .sb-dot{background:var(--green);border-color:var(--green);color:#fff}
+.sb-step.active .sb-dot{background:var(--blue);border-color:var(--blue);color:#fff;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.4)}50%{box-shadow:0 0 0 6px rgba(37,99,235,0)}}
+.sb-lbl{font-size:10px;color:var(--gray);margin-top:5px}
+.sb-step.done .sb-lbl,.sb-step.active .sb-lbl{color:var(--blue);font-weight:700}
+/* ── SWITCH ── */
+.switch-wrap{display:flex;align-items:center;gap:10px}
+.switch{width:44px;height:24px;background:var(--border);border-radius:12px;cursor:pointer;position:relative;transition:background .2s}
+.switch.on{background:var(--blue)}
+.switch::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.switch.on::after{left:23px}
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-bg.on{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:20px}
+.modal-close{float:right;cursor:pointer;font-size:22px;color:var(--gray);margin-top:-4px;background:none;border:none}
+.upload-btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray)}
+.empty-state .ei{font-size:56px;display:block;margin-bottom:16px}
+@media(max-width:600px){.row-2{grid-template-columns:1fr}.nav-menu{gap:0}.nav-item{padding:8px 10px;font-size:12px}.page{padding:16px 12px}}
+/* ── Paper selector ─────────────────────────────────────── */
+.paper-opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.paper-opt{border:2px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;transition:all .2s;background:#fff}
+.paper-opt.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue);font-weight:600}
+/* ── Quote form ─────────────────────────────────────────── */
+.quote-section{background:linear-gradient(135deg,#f0f4ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:16px;padding:24px;margin-bottom:20px}
+.quote-section h3{font-size:16px;font-weight:700;margin-bottom:4px;color:#312e81}
+.quote-section p{font-size:13px;color:#6366f1;margin-bottom:16px}
+.material-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px}
+.material-opt{border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:all .2s;background:#fff}
+.material-opt.on{border-color:#6366f1;background:#ede9fe;color:#4f46e5;font-weight:600}
+.material-opt .mo-name{font-size:13px;font-weight:600}
+.material-opt .mo-rate{font-size:11px;color:var(--gray);margin-top:2px}
+.material-opt.on .mo-rate{color:#6366f1}
+/* ── Dashboard service/product cards ───────────────────────── */
+.dash-svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:8px}
+.dash-svc-card{border:1px solid var(--border);border-radius:14px;padding:18px;background:#fff;cursor:pointer;transition:all .2s}
+.dash-svc-card:hover{border-color:var(--blue);box-shadow:0 6px 20px rgba(37,99,235,.1);transform:translateY(-2px)}
+.dash-prd-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff;transition:all .2s}
+.dash-prd-card:hover{border-color:var(--blue);box-shadow:0 4px 14px rgba(37,99,235,.08)}
+/* ── Shop closed banner ─────────────────────────────────── */
+.shop-closed-bar{background:#dc2626;color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:14px;font-weight:600;display:none}
+.shop-closed-bar.show{display:flex;align-items:center;gap:10px}
+/* ── Mobile responsive extra ───────────────────────────── */
+@media(max-width:520px){
+  .dash-svc-grid{grid-template-columns:1fr 1fr}
+  .material-opts{grid-template-columns:1fr 1fr}
+  .paper-opts{gap:6px}
+  .paper-opt{font-size:12px;padding:6px 10px}
+  .step-header{font-size:16px}
+}
+@media(max-width:360px){
+  .dash-svc-grid{grid-template-columns:1fr}
+  .material-opts{grid-template-columns:1fr}
+}
+/* FIXED: Mobile hamburger nav */
+.ham-btn{display:none;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:18px;line-height:1}
+@media(max-width:520px){
+  .ham-btn{display:flex;align-items:center}
+  .nav-menu,.nav-right{display:none}
+  .nav-menu.open,.nav-right.open{display:flex}
+  nav{flex-wrap:wrap;height:auto;padding:8px 14px;gap:8px}
+  .nav-brand{flex:1}
+  .nav-menu.open{order:3;width:100%;flex-direction:column;padding:4px 0 8px;border-top:1px solid rgba(255,255,255,.15);gap:2px}
+  .nav-right.open{order:2;gap:8px}
+  .nav-item{width:100%;border-radius:8px}
+}
+</style>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">🖨️ PrintShop Pro</div>
+  <!-- FIXED: hamburger button for mobile -->
+  <button class="ham-btn" id="ham-btn" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
+  <div class="nav-menu" id="nav-menu">
+    <div class="nav-item on" id="nav-dash"   onclick="gotoView('dash');closeMobileNav()">Dashboard</div>
+    <div class="nav-item"    id="nav-order"  onclick="guardedGotoOrder();closeMobileNav()">Place Order</div>
+    <div class="nav-item"    id="nav-orders" onclick="gotoView('orders');closeMobileNav()">My Orders</div>
+    <div class="nav-item"    onclick="window.location.href='/home';closeMobileNav()" style="opacity:.7">🏠 Home</div>
+  </div>
+  <div class="nav-right" id="nav-right">
+    <div class="avatar" id="user-avatar">U</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ════ DASHBOARD ════ -->
+  <div class="view on" id="view-dash">
+    <div class="section-title" id="dash-greeting">👋 Welcome back!</div>
+    <div class="shop-closed-bar" id="shop-closed-bar">
+      <span id="shop-closed-msg">🚫 Shop is temporarily closed. New orders are paused.</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="s-icon">📦</div><div class="s-val" id="s-total">—</div><div class="s-lbl">Total Orders</div></div>
+      <div class="stat"><div class="s-icon">⏳</div><div class="s-val" id="s-pending">—</div><div class="s-lbl">Pending</div></div>
+      <div class="stat"><div class="s-icon">✅</div><div class="s-val" id="s-done">—</div><div class="s-lbl">Delivered</div></div>
+      <div class="stat"><div class="s-icon">🖨️</div><div class="s-val" id="s-print">—</div><div class="s-lbl">Printing</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Recent Orders</div>
+      <div id="recent-orders"><div class="loading-center"><div class="spinner spinner-dark" style="width:32px;height:32px;display:inline-block"></div><p style="margin-top:12px">Loading…</p></div></div>
+    </div>
+    <div class="card" id="dash-services-section" style="display:none">
+      <div class="card-title">🖨️ Services</div>
+      <div class="dash-svc-grid" id="dash-svc-grid"></div>
+    </div>
+    <div class="card" id="dash-products-section" style="display:none">
+      <div class="card-title">🛍️ Products</div>
+      <div class="dash-svc-grid" id="dash-prd-grid"></div>
+    </div>
+    <div style="text-align:center">
+      <button class="btn btn-blue" onclick="guardedGotoOrder()">+ Place New Order</button>
+    </div>
+  </div>
+
+  <!-- ════ PLACE ORDER ════ -->
+  <div class="view" id="view-order">
+    <div class="section-title">🖨️ Place New Order</div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-blue" id="tab-std-order" onclick="switchOrderTab('standard')">Standard Order</button>
+      <button class="btn btn-ghost" id="tab-quote-req" onclick="switchOrderTab('quote')">Quote Request</button>
+    </div>
+
+    <div id="order-tab-standard">
+
+    <!-- Steps — only 2 now: Upload+Options → Delivery+Review → (redirects to Payment page) -->
+    <div class="steps">
+      <div class="step active" id="st-1"><div class="step-circle">1</div><div class="step-lbl">Upload & Options</div></div>
+      <div class="step"        id="st-2"><div class="step-circle">2</div><div class="step-lbl">Delivery & Review</div></div>
+      <div class="step"        id="st-3"><div class="step-circle">3</div><div class="step-lbl">Secure Payment</div></div>
+    </div>
+
+    <!-- ── Step 1 ── -->
+    <div id="step-1">
+      <div class="card">
+        <div class="card-title">📁 Upload Your File</div>
+        <div class="alert err" id="a-upload" style="display:none"></div>
+        <div class="upload-zone" id="upload-zone"
+             ondragover="handleDrag(event,true)" ondragleave="handleDrag(event,false)" ondrop="handleDrop(event)">
+          <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile(this.files[0])">
+          <div class="upload-icon">☁️</div>
+          <div class="upload-text"><b>Click to upload</b> or drag & drop</div>
+          <div class="upload-text" style="font-size:12px;margin-top:4px">PDF, JPG, PNG — Max 10 MB</div>
+        </div>
+        <!-- FIX #2: display controlled entirely by JS (display:none set inline here, toggled by JS) -->
+        <div class="upload-preview" id="upload-preview" style="display:none">
+          <div class="preview-icon" id="preview-icon">📄</div>
+          <div class="preview-info">
+            <div class="preview-name" id="preview-name"></div>
+            <div class="preview-size" id="preview-size"></div>
+          </div>
+          <button class="remove-file" onclick="removeFile()" title="Remove file">✕</button>
+        </div>
+        <div id="pdf-preview-area" style="display:none">
+          <canvas id="pdf-canvas"></canvas>
+          <div class="pdf-nav">
+            <button onclick="changePage(-1)">◀ Prev</button>
+            <span id="pdf-page-info">Page 1 of 1</span>
+            <button onclick="changePage(1)">Next ▶</button>
+          </div>
+        </div>
+        <div class="upload-btn-row" id="upload-drive-row" style="display:none">
+          <button class="btn btn-blue" onclick="uploadToDrive()" id="btn-upload-drive">☁️ Upload to Server</button>
+          <span id="upload-status" style="font-size:13px;color:var(--gray)"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ Print Options</div>
+        <div class="row-2">
+          <div class="fg"><label>Pages</label><input type="number" id="opt-pages" min="1" value="1" oninput="updatePrice()"></div>
+          <div class="fg"><label>Quantity (Copies)</label><input type="number" id="opt-qty" min="1" value="1" oninput="updatePrice()"></div>
+        </div>
+        <div class="row-2">
+          <div class="fg">
+            <label>Color Type</label>
+            <select id="opt-color" onchange="updatePrice()">
+              <option value="bw">⚫ Black &amp; White</option>
+              <option value="color">🎨 Full Color</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Paper Size</label>
+            <select id="opt-size" onchange="updatePrice()">
+              <option value="A4">A4 (Standard)</option>
+              <option value="A3">A3 (Large)</option>
+              <option value="Custom">Custom Size</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Paper Type</label>
+          <div class="paper-opts" id="paper-opts-container"></div>
+          <div id="paper-hint" style="font-size:12px;color:var(--gray);margin-top:6px"></div>
+        </div>
+        <div class="fg">
+          <div class="switch-wrap">
+            <div class="switch" id="urgent-sw" onclick="toggleUrgent()"></div>
+            <div>
+              <div style="font-weight:600;font-size:14px">⚡ Urgent Printing (+₹50)</div>
+              <div style="font-size:12px;color:var(--gray)">Priority — ready in ~2 hours</div>
+            </div>
+          </div>
+        </div>
+        <div class="fg"><label>Special Notes (optional)</label>
+          <textarea id="opt-notes" placeholder="Double-sided, staple, binding…"></textarea>
+        </div>
+        <div class="price-box">
+          <div class="price-row"><span>📄 Print Cost</span><span id="p-print">₹0.00</span></div>
+          <div class="price-row"><span>📐 Size</span><span id="p-size">×1 (A4)</span></div>
+          <div class="price-row"><span>⚡ Urgent</span><span id="p-urgent">₹0</span></div>
+          <div class="price-row"><span>🚚 Delivery</span><span id="p-delivery">₹0</span></div>
+          <div class="price-row total"><span>Total</span><span id="p-total">₹0.00</span></div>
+        </div>
+        <button class="btn btn-blue btn-full" style="margin-top:16px" onclick="goStep(2)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 2 ── -->
+    <div id="step-2" style="display:none">
+      <div class="card">
+        <div class="card-title">🚚 Delivery Method</div>
+        <div class="toggle-group">
+          <div class="toggle-opt on" id="del-pickup" onclick="setDelivery('pickup')">
+            <span class="opt-icon">🏪</span>
+            <div class="opt-title">Store Pickup</div>
+            <div class="opt-sub">Free · Collect at store</div>
+          </div>
+          <div class="toggle-opt" id="del-delivery" onclick="setDelivery('delivery')">
+            <span class="opt-icon">🚚</span>
+            <div class="opt-title">Home Delivery</div>
+            <div class="opt-sub">+₹60 · To your door</div>
+          </div>
+        </div>
+        <div class="fg" id="address-group" style="margin-top:16px;display:none">
+          <label>Delivery Address</label>
+          <textarea id="opt-address" placeholder="Full address including city and pincode…" style="min-height:80px"></textarea>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Order Summary</div>
+        <div id="order-summary"></div>
+        <div class="price-box" style="margin-top:16px">
+          <div class="price-row"><span>📄 Print Cost</span><span id="rs-print">₹0</span></div>
+          <div class="price-row"><span>⚡ Urgent</span><span id="rs-urgent">₹0</span></div>
+          <div class="price-row"><span>🚚 Delivery</span><span id="rs-delivery">₹0</span></div>
+          <div class="price-row total"><span>Grand Total</span><span id="rs-total">₹0</span></div>
+        </div>
+        <div class="alert err" id="a-step2" style="display:none"></div>
+        <!-- FIX #12: button now has id="btn-place-order" for reliable spinner targeting -->
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+          <button class="btn btn-blue btn-full" id="btn-place-order" onclick="placeOrder()">
+            Place Order &amp; Pay →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /order-tab-standard -->
+
+    <div id="order-tab-quote" style="display:none">
+      <div class="quote-section">
+        <h3>Custom Poster, Banner, Flex, or Design Work</h3>
+        <p>Send dimensions and requirements. The shop will review and quote the final price.</p>
+        <div class="alert err" id="a-quote" style="display:none"></div>
+        <div class="alert ok" id="a-quote-ok" style="display:none"></div>
+        <div class="row-2">
+          <div class="fg">
+            <label>Service Type</label>
+            <select id="q-service">
+              <option value="Poster">Poster</option>
+              <option value="Banner">Banner</option>
+              <option value="Flex">Flex</option>
+              <option value="Design">Design Work</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Quantity</label>
+            <input type="number" id="q-qty" min="1" value="1">
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="fg"><label>Width (cm)</label><input type="number" id="q-width" min="1"></div>
+          <div class="fg"><label>Height (cm)</label><input type="number" id="q-height" min="1"></div>
+        </div>
+        <div class="fg">
+          <label>Material</label>
+          <div class="material-opts" id="material-opts"></div>
+        </div>
+        <div class="fg">
+          <label>Design</label>
+          <select id="q-design">
+            <option value="self">I will provide design</option>
+            <option value="shop">Need design help</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Requirements</label>
+          <textarea id="q-details" placeholder="Describe material, finish, deadline, text, images, or other details"></textarea>
+        </div>
+        <button class="btn btn-blue" onclick="submitQuoteRequest()">📩 Submit Quote Request</button>
+      </div>
+      <div class="card" id="my-quotes-card" style="display:none">
+        <div class="card-title">My Quote Requests</div>
+        <div id="my-quotes-list"></div>
+      </div>
+    </div>
+
+  </div><!-- /view-order -->
+
+  <!-- ════ MY ORDERS ════ -->
+  <div class="view" id="view-orders">
+    <div class="section-title">📦 My Orders</div>
+    <div id="orders-list"><div class="loading-center"><div class="spinner spinner-dark" style="width:32px;height:32px;display:inline-block"></div><p style="margin-top:12px;color:var(--gray)">Loading…</p></div></div>
+  </div>
+
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-bg" id="order-modal">
+  <div class="modal">
+    <div class="modal-title">Order Details <button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ── Session guard ──────────────────────────────────────────
+const SESS = JSON.parse(localStorage.getItem('ps_session') || 'null');
+if (!SESS || SESS.role !== 'user') { window.location.href = '/'; }
+
+// ── Globals ────────────────────────────────────────────────
+let uploadedFile  = { b64:'', name:'', mime:'', url:'', viewUrl:'' };
+let pdfDoc = null, pdfPage = 1, pdfTotal = 1;
+let urgent   = false;
+let delivery = 'pickup';
+let ordersList = [];
+
+const esc = v => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// FIXED: Live pricing loaded from server — avoids desync with backend PRICING constants
+let LIVE_PRICING = { base:10, bwPerPage:1.5, colorPerPage:5, a3Multi:1.8, customMulti:2.0, urgentFee:50, deliveryFee:60 };
+
+// FIXED: Mobile hamburger helpers
+function toggleMobileNav() {
+  const open = document.getElementById('nav-menu').classList.toggle('open');
+  document.getElementById('nav-right').classList.toggle('open', open);
+}
+function closeMobileNav() {
+  document.getElementById('nav-menu').classList.remove('open');
+  document.getElementById('nav-right').classList.remove('open');
+}
+
+
+// ── PAPER CONFIGURATION ───────────────────────────────────────
+let PAPER_CONFIG   = null;
+let selectedPaperId = '';
+
+function loadPaperConfig() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok || !r.config) return;
+      PAPER_CONFIG = r.config;
+      selectedPaperId = r.config.defaultPaperId || '';
+      renderPaperOpts();
+    })
+    .withFailureHandler(() => {})
+    .getPublicPaperConfig();
+}
+
+function renderPaperOpts() {
+  if (!PAPER_CONFIG) return;
+  const size    = document.getElementById('opt-size').value || 'A4';
+  const active  = PAPER_CONFIG.paperTypes.filter(p => p.active && p.prices && p.prices[size]);
+  const hint    = document.getElementById('paper-hint');
+  const container = document.getElementById('paper-opts-container');
+  if (!container) return;
+  if (!active.length) { container.innerHTML = '<div class="paper-opt on">Standard</div>'; if(hint) hint.textContent=''; return; }
+  container.innerHTML = active.map(p =>
+    `<div class="paper-opt ${p.id === selectedPaperId ? 'on' : ''}" data-paper-id="${esc(p.id)}" onclick="selectPaper(this)">
+      ${esc(String(p.name || '').replace(/\s*\d+gsm/i,''))} <span style="font-size:10px;opacity:.7">${esc(p.gsm)}g</span>
+    </div>`).join('');
+  updatePaperHint();
+  updatePrice();
+}
+
+function selectPaper(el) {
+  document.querySelectorAll('.paper-opt').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  selectedPaperId = el.dataset.paperId || '';
+  updatePaperHint();
+  updatePrice();
+}
+
+function updatePaperHint() {
+  if (!PAPER_CONFIG) return;
+  const hint = document.getElementById('paper-hint');
+  if (!hint) return;
+  const paper = PAPER_CONFIG.paperTypes.find(p => p.id === selectedPaperId);
+  const size  = document.getElementById('opt-size').value || 'A4';
+  if (paper && paper.prices && paper.prices[size]) {
+    const ink = document.getElementById('opt-color').value === 'color'
+      ? (PAPER_CONFIG.inkCost.color||4) : (PAPER_CONFIG.inkCost.bw||1);
+    hint.textContent = `₹${paper.prices[size]}/sheet paper + ₹${ink}/page ink`;
+    hint.style.color = 'var(--blue)';
+  } else {
+    hint.textContent = 'Standard pricing applies';
+    hint.style.color = 'var(--gray)';
+  }
+}
+
+// ── ORDER TAB SWITCH (Standard / Quote) ───────────────────────
+function switchOrderTab(tab) {
+  const isStd = tab === 'standard';
+  const std = document.getElementById('order-tab-standard');
+  const quote = document.getElementById('order-tab-quote');
+  const stdBtn = document.getElementById('tab-std-order');
+  const quoteBtn = document.getElementById('tab-quote-req');
+  if (std) std.style.display = isStd ? 'block' : 'none';
+  if (quote) quote.style.display = isStd ? 'none' : 'block';
+  if (stdBtn) stdBtn.className = isStd ? 'btn btn-blue' : 'btn btn-ghost';
+  if (quoteBtn) quoteBtn.className = isStd ? 'btn btn-ghost' : 'btn btn-blue';
+  if (!isStd) { loadPosterMaterials(); loadMyQuotes(); }
+}
+
+// ── POSTER MATERIAL OPTIONS ───────────────────────────────────
+let posterPricing = null;
+let selectedMaterial = '';
+
+function loadPosterMaterials() {
+  if (posterPricing) { renderMaterialOpts(); return; }
+  google.script.run
+    .withSuccessHandler(r => {
+      if (r.ok) { posterPricing = r.pricing; selectedMaterial = (r.pricing.materials[0]||{}).id||''; renderMaterialOpts(); }
+    })
+    .withFailureHandler(() => {})
+    .getPosterPricing();
+}
+
+function renderMaterialOpts() {
+  const el = document.getElementById('material-opts');
+  if (!el || !posterPricing) return;
+  el.innerHTML = posterPricing.materials.map(m =>
+    `<div class="material-opt ${m.id===selectedMaterial?'on':''}" onclick="selectMaterial('${esc(m.id)}',this)">
+      <div class="mo-name">${esc(m.name)}</div>
+      <div class="mo-rate">₹${esc(m.pricePerSqFt)}/sq.ft</div>
+    </div>`).join('');
+}
+
+function selectMaterial(id, el) {
+  selectedMaterial = id;
+  document.querySelectorAll('.material-opt').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── SUBMIT QUOTE REQUEST ──────────────────────────────────────
+function submitQuoteRequest() {
+  const width   = document.getElementById('q-width').value;
+  const height  = document.getElementById('q-height').value;
+  const qty     = document.getElementById('q-qty').value;
+  const details = document.getElementById('q-details').value.trim();
+  if (!width || !height) { showAlert('a-quote','⚠️ Please enter width and height'); return; }
+  if (!details) { showAlert('a-quote','⚠️ Please describe your requirements'); return; }
+
+  const btn = document.querySelector('#order-tab-quote button[onclick="submitQuoteRequest()"]');
+  if (!btn) return;
+  btn.disabled = true; btn.textContent = '⏳ Submitting…';
+
+  const payload = {
+    serviceType : document.getElementById('q-service').value,
+    width, height, quantity: qty,
+    material    : selectedMaterial,
+    designType  : document.getElementById('q-design').value,
+    details
+  };
+
+  google.script.run
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = '📩 Submit Quote Request';
+      if (r.ok) {
+        showAlert('a-quote-ok', '✅ ' + r.msg);
+        document.getElementById('q-details').value = '';
+        loadMyQuotes();
+      } else { showAlert('a-quote','❌ ' + r.err); }
+    })
+    .withFailureHandler(e => { btn.disabled=false; btn.textContent='📩 Submit Quote Request'; showAlert('a-quote','❌ '+e.message); })
+    .createQuoteRequest(payload, SESS.userId, SESS.token);
+}
+
+// ── MY QUOTE REQUESTS ─────────────────────────────────────────
+function loadMyQuotes() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok || !r.quotes.length) return;
+      const card = document.getElementById('my-quotes-card');
+      const list = document.getElementById('my-quotes-list');
+      if (!card || !list) return;
+      card.style.display = 'block';
+      const statusColor = { Pending:'#f59e0b', Contacted:'#2563eb', Quoted:'#7c3aed', Ordered:'#16a34a', Cancelled:'#dc2626' };
+      list.innerHTML = r.quotes.map(q => `
+        <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:700">${esc(q.service_type)} — ${esc(q.width_cm)}×${esc(q.height_cm)}cm × ${esc(q.quantity)}</div>
+            <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${statusColor[q.status]||'#374151'}20;color:${statusColor[q.status]||'#374151'}">${esc(q.status)}</span>
+          </div>
+          <div style="font-size:12.5px;color:var(--gray);line-height:1.5">${esc(q.details||'')}</div>
+          ${q.quoted_price ? `<div style="font-size:14px;font-weight:700;color:var(--blue);margin-top:8px">Quoted: ₹${esc(q.quoted_price)}</div>` : ''}
+          ${q.admin_notes  ? `<div style="font-size:12.5px;color:#374151;margin-top:6px;background:var(--gray-l);padding:8px;border-radius:8px">${esc(q.admin_notes)}</div>` : ''}
+          <div style="font-size:11px;color:var(--gray);margin-top:6px">${new Date(q.requested_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+        </div>`).join('');
+    })
+    .withFailureHandler(() => {})
+    .getUserQuoteRequests(SESS.userId, SESS.token);
+}
+
+// ── SHOP CLOSED GUARD FOR ORDER ───────────────────────────────
+function checkShopOpenBeforeOrder() {
+  return new Promise(resolve => {
+    google.script.run
+      .withSuccessHandler(r => resolve(!r || r.isOpen))
+      .withFailureHandler(() => resolve(true))
+      .getShopInfo();
+  });
+}
+
+// ── Shop-closed guard for order placement ────────────────────
+function guardedGotoOrder() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r || r.isOpen) {
+        gotoView('order');
+      } else {
+        showShopClosedAlert(r.closedMsg);
+      }
+    })
+    .withFailureHandler(() => gotoView('order')) // fail open
+    .getShopInfo();
+}
+
+function showShopClosedAlert(msg) {
+  const bar = document.getElementById('shop-closed-bar');
+  if (!bar) {
+    showAlert('a-upload', '🚫 ' + (msg || 'Shop is temporarily closed. Please check back soon.'));
+    return;
+  }
+  bar.classList.add('show');
+  const msgEl = document.getElementById('shop-closed-msg');
+  if (msgEl) msgEl.textContent = '🚫 ' + (msg || 'Shop is temporarily closed. Please check back soon.');
+  bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Flash effect
+  bar.style.animation = 'none';
+  setTimeout(() => bar.style.animation = '', 10);
+}
+
+// ── Back-button / History Support ─────────────────────────
+window.addEventListener('popstate', e => {
+  const st = e.state;
+  if (!st) { gotoView('dash', true); return; }
+  if (st.psView === 'order' && st.psStep > 1) {
+    gotoView('order', true);
+    goStep(st.psStep, true);
+  } else if (st.psView) {
+    gotoView(st.psView, true);
+  }
+});
+// Push initial state so first back-button press doesn't leave the app
+history.replaceState({ psView: 'dash', psStep: 1 }, '', '/user?view=dash');
+
+// ── Init ───────────────────────────────────────────────────
+document.getElementById('user-avatar').textContent = (SESS.name || 'U')[0].toUpperCase();
+document.getElementById('dash-greeting').textContent = '👋 Welcome, ' + SESS.name + '!';
+loadDashboard();
+loadPaperConfig();
+
+// FIXED: Show loading state in price box until live pricing arrives from server
+function showPriceLoading() {
+  ['p-print','p-size','p-urgent','p-delivery','p-total'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '…'; el.style.opacity = '0.4'; }
+  });
+}
+function clearPriceLoading() {
+  ['p-print','p-size','p-urgent','p-delivery','p-total'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '';
+  });
+}
+
+// Init — load live pricing from backend so summary stays in sync with admin settings
+showPriceLoading();
+google.script.run
+  .withSuccessHandler(r => {
+    if (r && r.ok && r.pricing) { LIVE_PRICING = r.pricing; }
+    clearPriceLoading();
+    updatePrice();
+  })
+  .withFailureHandler(() => { clearPriceLoading(); updatePrice(); })
+  .getPublicPricing();
+
+// ── Navigation ─────────────────────────────────────────────
+function gotoView(v, skipHistory) {
+  ['dash','order','orders'].forEach(id => {
+    document.getElementById('view-'  + id).classList.toggle('on', id === v);
+    document.getElementById('nav-' + id).classList.toggle('on', id === v);
+  });
+  if (v === 'dash')   loadDashboard();
+  if (v === 'orders') loadOrders();
+  if (v === 'order')  resetOrder();
+  if (!skipHistory) history.pushState({ psView: v, psStep: 1 }, '', '/user?view=' + encodeURIComponent(v));
+}
+function logout() { localStorage.removeItem('ps_session'); window.location.href = '/home'; }
+
+// ── Alert helper ───────────────────────────────────────────
+function showAlert(id, msg, type='err') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'alert ' + type;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 8000);
+}
+
+// FIX #12: spinner now uses id-based targeting reliably
+function setSpinner(id, loading, label) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (loading) {
+    btn.dataset.orig = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Please wait…';
+  } else {
+    btn.innerHTML = btn.dataset.orig || label || btn.innerHTML;
+  }
+}
+
+// ── Dashboard ──────────────────────────────────────────────
+function loadDashboard() {
+  // Check shop status
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r || !r.ok) return;
+      const bar = document.getElementById('shop-closed-bar');
+      if (!bar) return;
+      if (!r.isOpen) {
+        bar.classList.add('show');
+        const msgEl = document.getElementById('shop-closed-msg');
+        if (msgEl) msgEl.textContent = '🚫 ' + (r.closedMsg || 'Shop is temporarily closed. New orders are paused.');
+      } else { bar.classList.remove('show'); }
+    })
+    .withFailureHandler(() => {})
+    .getShopInfo();
+
+  // Load orders
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      ordersList = r.orders || [];
+      const total    = ordersList.length;
+      const pending  = ordersList.filter(o => !['Delivered'].includes(o.status)).length;
+      const done     = ordersList.filter(o => o.status === 'Delivered').length;
+      const printing = ordersList.filter(o => o.status === 'Printing').length;
+      document.getElementById('s-total').textContent   = total;
+      document.getElementById('s-pending').textContent = pending;
+      document.getElementById('s-done').textContent    = done;
+      document.getElementById('s-print').textContent   = printing;
+      renderRecentOrders(ordersList.slice(0, 5));
+    })
+    .withFailureHandler(() => {})
+    .getUserOrders(SESS.userId, SESS.token);
+
+  // Load services for dashboard
+  google.script.run
+    .withSuccessHandler(r => { if (r.ok) renderDashServices(r.services || []); })
+    .withFailureHandler(() => {})
+    .getServicesData();
+
+  // Load products for dashboard
+  google.script.run
+    .withSuccessHandler(r => { if (r.ok) renderDashProducts(r.products || []); })
+    .withFailureHandler(() => {})
+    .getProductsData();
+}
+
+function renderDashServices(services) {
+  const active = services.filter(s => String(s.active) === 'true' || s.active === true);
+  const sec = document.getElementById('dash-services-section');
+  if (!active.length || !sec) return;
+  sec.style.display = 'block';
+  const icons = ['🖨️','📄','🖼️','📋','📦','🎨','✉️','🗂️'];
+  document.getElementById('dash-svc-grid').innerHTML = active.map((s, i) => `
+    <div class="dash-svc-card" onclick="guardedGotoOrder()">
+      <div style="font-size:26px;margin-bottom:8px">${icons[i % icons.length]}</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px">${esc(s.name)}</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:8px;line-height:1.4">${esc(s.description || '')}</div>
+      <div style="font-size:13px;font-weight:600;color:var(--blue)">From ₹${esc(s.base_price || 10)}</div>
+    </div>`).join('');
+}
+
+function renderDashProducts(products) {
+  const active = products.filter(p => (String(p.active) === 'true' || p.active === true) && parseInt(p.stock || 0) > 0);
+  const sec = document.getElementById('dash-products-section');
+  if (!active.length || !sec) return;
+  sec.style.display = 'block';
+  const icons = ['📦','📌','✏️','📎','📏','🖊️'];
+  document.getElementById('dash-prd-grid').innerHTML = active.map((p, i) => `
+    <div class="dash-prd-card">
+      <div style="font-size:22px;margin-bottom:6px">${icons[i % icons.length]}</div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:3px">${esc(p.name)}</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:6px;line-height:1.4">${esc(p.description || '')}</div>
+      <div style="font-size:16px;font-weight:800;color:var(--blue)">₹${esc(p.price)}</div>
+      <div style="font-size:11px;color:var(--green);margin-top:3px">✅ In Stock (${esc(p.stock)})</div>
+    </div>`).join('');
+}
+
+
+function renderRecentOrders(orders) {
+  const el = document.getElementById('recent-orders');
+  if (!orders || !orders.length) {
+    el.innerHTML = `<div class="empty-state"><span class="ei">📭</span><h3>No orders yet</h3><p>Place your first order to get started!</p></div>`;
+    return;
+  }
+  el.innerHTML = orders.map(o => orderCardHTML(o, false)).join('');
+}
+
+// ── Orders List ────────────────────────────────────────────
+function loadOrders() {
+  const el = document.getElementById('orders-list');
+  el.innerHTML = '<div class="loading-center"><div class="spinner spinner-dark" style="width:32px;height:32px;display:inline-block"></div><p style="margin-top:12px;color:var(--gray)">Loading…</p></div>';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) { el.innerHTML = `<p style="color:var(--red);padding:20px">Error: ${r.err}</p>`; return; }
+      ordersList = r.orders || [];
+      if (!ordersList.length) {
+        el.innerHTML = `<div class="empty-state"><span class="ei">📭</span><h3>No orders yet</h3><p>Place your first print order!</p><button class="btn btn-blue" onclick="guardedGotoOrder()" style="margin-top:16px">+ Place Order</button></div>`;
+        return;
+      }
+      el.innerHTML = ordersList.map(o => orderCardHTML(o, true)).join('');
+    })
+    .withFailureHandler(e => { el.innerHTML = `<p style="color:var(--red);padding:20px">Error loading orders.</p>`; })
+    .getUserOrders(SESS.userId, SESS.token);
+}
+
+function orderCardHTML(o, showReorder) {
+  const date = new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  const paidClass = o.payment_status === 'Paid' ? 'paid' : (String(o.payment_status).includes('Reject') ? 'rejected' : 'pending');
+  const badge = statusBadge(o.status);
+  const payBadge = paymentBadge(o.payment_status);
+  const orderId = esc(o.order_id);
+  return `<div class="order-card ${paidClass}" onclick="showOrderDetail('${orderId}')">
+    <div class="order-header">
+      <div><div class="order-id">${orderId}</div><div style="font-size:12px;color:var(--gray);margin-top:3px">${esc(date)}</div></div>
+      <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end">${badge}${payBadge}</div>
+    </div>
+    <div class="order-meta">
+      <span>📄 ${esc(o.pages)} page(s)</span>
+      <span>${o.color_type==='color'?'🎨 Color':'⚫ B&W'}</span>
+      <span>📐 ${esc(o.size)}</span>
+      <span>×${esc(o.quantity)}</span>
+      ${o.urgent==='Yes'?'<span>⚡ Urgent</span>':''}
+      <span>${o.delivery_type==='delivery'?'🚚 Delivery':'🏪 Pickup'}</span>
+    </div>
+    <div class="order-footer">
+      <div class="order-price">₹${esc(o.total_price)}</div>
+      ${showReorder ? `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();doReorder('${orderId}')">🔄 Reorder</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function statusBadge(s) {
+  const m = { 'Pending Payment':'badge-amber','Pending Verification':'badge-blue','Accepted':'badge-blue',
+    'Printing':'badge-purple','Ready':'badge-green','Delivered':'badge-green',
+    'Payment Rejected':'badge-red','Payment Expired':'badge-gray','Under Review':'badge-blue' };
+  return `<span class="badge ${m[s]||'badge-gray'}">${esc(s||'—')}</span>`;
+}
+function paymentBadge(s) {
+  const m = { 'Unpaid':'badge-amber','Under Review':'badge-blue','Paid':'badge-green','Rejected':'badge-red','Payment Submitted':'badge-blue' };
+  return `<span class="badge ${m[s]||'badge-gray'}">${esc(s||'—')}</span>`;
+}
+
+// ── Order Detail Modal ─────────────────────────────────────
+function showOrderDetail(orderId) {
+  const o = ordersList.find(x => x.order_id === orderId);
+  if (!o) return;
+  const statuses = ['Pending Payment','Accepted','Printing','Ready','Delivered'];
+  const curIdx   = statuses.indexOf(o.status);
+  const stepsHtml = `<div class="status-bar">${statuses.map((s,i) => `
+    <div class="sb-step ${i<curIdx?'done':i===curIdx?'active':''}">
+      <div class="sb-dot">${i<curIdx?'✓':i+1}</div>
+      <div class="sb-lbl">${s}</div>
+    </div>`).join('')}</div>`;
+
+  const payInfo = o.payment ? `
+    <div style="background:var(--gray-l);border-radius:10px;padding:14px;margin-top:14px">
+      <div style="font-weight:700;margin-bottom:8px">💳 Payment Info</div>
+      <p style="font-size:13px">UPI Ref: <b>${esc(o.payment.upi_ref||'—')}</b></p>
+      <p style="font-size:13px">Score: <b>${esc(o.payment.score||'—')}/100</b></p>
+      <p style="font-size:13px">Status: <b>${esc(o.payment.auto_status||o.payment.status||'—')}</b></p>
+      ${o.payment.screenshot_url ? `<p style="font-size:13px;margin-top:6px"><a href="${esc(o.payment.screenshot_url)}" target="_blank" rel="noopener" style="color:var(--blue)">📸 View Screenshot</a></p>` : ''}
+    </div>` : '';
+
+  // FIX #3/#5: "Pay Now" now redirects to dedicated Payment page
+  const needsPayment = ['Pending Payment','Payment Rejected','Payment Expired'].includes(o.status);
+  document.getElementById('modal-content').innerHTML = `
+    <p><b>Order ID:</b> ${esc(o.order_id)}</p>
+    <p style="margin-top:4px"><b>Date:</b> ${new Date(o.created_at).toLocaleString('en-IN')}</p>
+    ${stepsHtml}
+    <table style="width:100%;border-collapse:collapse;margin-top:12px">
+      ${[['File',o.file_name||'N/A'],['Pages',o.pages],['Color',o.color_type==='color'?'Color':'B&W'],
+         ['Size',o.size],['Qty',o.quantity],['Urgent',o.urgent],['Delivery',o.delivery_type],
+          ['Address',o.address||'—'],['Total','₹'+o.total_price],['Payment',o.payment_status]]
+        .map(([k,v]) => `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px;color:var(--gray);font-size:13px">${esc(k)}</td><td style="padding:8px;font-size:13px;font-weight:600">${esc(v)}</td></tr>`).join('')}
+    </table>
+    ${payInfo}
+    ${o.file_url ? `<a href="${esc(o.file_url)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="margin-top:14px;display:inline-flex">📥 Download File</a>` : ''}
+    ${needsPayment ? `<button class="btn btn-blue btn-full" style="margin-top:14px" onclick="goToPayment('${esc(o.order_id)}')">💳 Pay Now</button>` : ''}
+  `;
+  document.getElementById('order-modal').classList.add('on');
+}
+
+function closeModal() { document.getElementById('order-modal').classList.remove('on'); }
+
+// FIX #3 & #5: redirect to Payment page with orderId
+function goToPayment(orderId) {
+  localStorage.setItem('ps_pay_order', orderId);
+  window.location.href = '/payment?orderId=' + encodeURIComponent(orderId);
+}
+
+// ── Reorder ────────────────────────────────────────────────
+function doReorder(orderId) {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) { alert('Could not load order: ' + r.err); return; }
+      const d = r.data;
+      gotoView('order'); // calls resetOrder() synchronously
+      // Restore previous file reference so the upload-gate passes
+      if (d.fileUrl) {
+        uploadedFile.url     = d.fileUrl;
+        uploadedFile.name    = d.fileName || 'Previously uploaded file';
+        uploadedFile.viewUrl = d.fileUrl;
+        document.getElementById('preview-icon').textContent = '📄';
+        document.getElementById('preview-name').textContent = uploadedFile.name;
+        document.getElementById('preview-size').textContent = 'Previously uploaded';
+        document.getElementById('upload-preview').style.display    = 'flex';
+        document.getElementById('upload-drive-row').style.display  = 'flex';
+        document.getElementById('upload-status').textContent       = '✅ Using previous file';
+        const btn = document.getElementById('btn-upload-drive');
+        btn.textContent = '✅ File ready'; btn.style.background = 'var(--green)';
+      }
+      if (d.pages)     document.getElementById('opt-pages').value = d.pages;
+      if (d.qty)       document.getElementById('opt-qty').value   = d.qty;
+      if (d.colorType) document.getElementById('opt-color').value = d.colorType;
+      if (d.size)      document.getElementById('opt-size').value  = d.size;
+      if (d.paperId) {
+        selectedPaperId = d.paperId;
+        renderPaperOpts();
+      }
+      urgent = !!d.urgent;
+      document.getElementById('urgent-sw').classList.toggle('on', urgent);
+      setDelivery(d.delivery || 'pickup');
+      if (d.address) document.getElementById('opt-address').value = d.address;
+      updatePrice();
+    })
+    .withFailureHandler(() => {})
+    .reorderItem(orderId, SESS.userId, SESS.token);
+}
+
+// ── File Upload Logic ──────────────────────────────────────
+function handleDrag(e, over) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.toggle('drag', over);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  handleDrag(e, false);
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const allowed = ['application/pdf','image/jpeg','image/jpg','image/png'];
+  if (!allowed.includes(file.type)) { showAlert('a-upload','❌ Only PDF, JPG, PNG files are allowed'); return; }
+  if (file.size > 10 * 1048576)     { showAlert('a-upload','❌ File too large (max 10 MB)'); return; }
+  // Warn user that large files will be slow through GAS
+  if (file.size > 3 * 1048576) {
+    showAlert('a-upload', `⚠️ Large file (${(file.size/1048576).toFixed(1)} MB) — upload may take 20–60 seconds. Please wait after clicking "Upload to Server".`, 'warn');
+  }
+
+  const icons = { 'application/pdf':'📄','image/jpeg':'🖼️','image/jpg':'🖼️','image/png':'🖼️' };
+  document.getElementById('preview-icon').textContent = icons[file.type] || '📁';
+  document.getElementById('preview-name').textContent = file.name;
+  document.getElementById('preview-size').textContent = (file.size/1024).toFixed(1) + ' KB';
+  // FIX #2: use display:flex for the preview row
+  document.getElementById('upload-preview').style.display = 'flex';
+  document.getElementById('upload-drive-row').style.display = 'flex';
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    uploadedFile.b64  = ev.target.result.split(',')[1];
+    uploadedFile.name = file.name;
+    uploadedFile.mime = file.type;
+    uploadedFile.url  = '';
+  };
+  reader.readAsDataURL(file);
+
+  if (file.type === 'application/pdf') {
+    const r2 = new FileReader();
+    r2.onload = ev => {
+      // BUG FIX: guard against pdfjsLib being undefined when CDN is unavailable
+      if (typeof pdfjsLib === 'undefined') {
+        showAlert('a-upload', '⚠️ PDF preview unavailable (CDN blocked). Enter page count manually.', 'warn');
+        document.getElementById('opt-pages').value = 1;
+        document.getElementById('pdf-preview-area').style.display = 'none';
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.getDocument({ data: new Uint8Array(ev.target.result) }).promise.then(doc => {
+        pdfDoc = doc; pdfTotal = doc.numPages; pdfPage = 1;
+        document.getElementById('opt-pages').value = pdfTotal;
+        renderPdfPage(1);
+        updatePrice();
+        document.getElementById('pdf-preview-area').style.display = 'block';
+      }).catch(() => {
+        showAlert('a-upload', '⚠️ Could not read PDF. Enter page count manually.', 'warn');
+        document.getElementById('pdf-preview-area').style.display = 'none';
+      });
+    };
+    r2.readAsArrayBuffer(file);
+  } else {
+    document.getElementById('pdf-preview-area').style.display = 'none';
+  }
+}
+
+function renderPdfPage(n) {
+  if (!pdfDoc) return;
+  pdfDoc.getPage(n).then(page => {
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx    = canvas.getContext('2d');
+    const vp     = page.getViewport({ scale: 1.2 });
+    canvas.width = vp.width; canvas.height = vp.height;
+    page.render({ canvasContext:ctx, viewport:vp });
+    document.getElementById('pdf-page-info').textContent = `Page ${n} of ${pdfTotal}`;
+  });
+}
+
+function changePage(dir) {
+  const np = pdfPage + dir;
+  if (np < 1 || np > pdfTotal) return;
+  pdfPage = np; renderPdfPage(pdfPage);
+}
+
+function removeFile() {
+  uploadedFile = { b64:'', name:'', mime:'', url:'', viewUrl:'' };
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-drive-row').style.display = 'none';
+  document.getElementById('pdf-preview-area').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  document.getElementById('btn-upload-drive').innerHTML = '☁️ Upload to Server';
+  document.getElementById('btn-upload-drive').style.background = '';
+  document.getElementById('upload-status').textContent = '';
+  pdfDoc = null;
+}
+
+function uploadToDrive() {
+  if (!uploadedFile.b64) { showAlert('a-upload','⚠️ Please select a file first'); return; }
+  const btn = document.getElementById('btn-upload-drive');
+  setSpinner('btn-upload-drive', true);
+  document.getElementById('upload-status').textContent = 'Uploading…';
+  google.script.run
+    .withSuccessHandler(r => {
+      setSpinner('btn-upload-drive', false, '☁️ Upload to Server');
+      if (r.ok) {
+        uploadedFile.url     = r.fileUrl;
+        uploadedFile.viewUrl = r.viewUrl;
+        document.getElementById('upload-status').textContent = '✅ Uploaded!';
+        btn.textContent = '✅ Uploaded';
+        btn.style.background = 'var(--green)';
+      } else {
+        document.getElementById('upload-status').textContent = '';
+        showAlert('a-upload', '❌ Upload failed: ' + r.err);
+      }
+    })
+    .withFailureHandler(e => { setSpinner('btn-upload-drive', false, '☁️ Upload to Server'); showAlert('a-upload','❌ ' + e.message); })
+    .uploadPrintFile(uploadedFile.b64, uploadedFile.name, uploadedFile.mime, SESS.userId, SESS.token);
+}
+
+// ── Pricing Engine — uses LIVE_PRICING + paper config if available ──
+function currentOrderTotals() {
+  const pages = Math.max(1, parseInt(document.getElementById('opt-pages').value) || 1);
+  const qty   = Math.max(1, parseInt(document.getElementById('opt-qty').value) || 1);
+  const color = document.getElementById('opt-color').value;
+  const size  = document.getElementById('opt-size').value;
+  const pr    = LIVE_PRICING;
+  let print, sizeLabel;
+
+  if (PAPER_CONFIG && selectedPaperId) {
+    const paper   = PAPER_CONFIG.paperTypes.find(p => p.id === selectedPaperId);
+    const pCost   = (paper && paper.prices && paper.prices[size]) ? parseFloat(paper.prices[size]) : 2.0;
+    const inkCost = color === 'color' ? parseFloat(PAPER_CONFIG.inkCost.color||4) : parseFloat(PAPER_CONFIG.inkCost.bw||1);
+    print         = pr.base + (pCost + inkCost) * pages * qty;
+    sizeLabel     = `${size} (${paper ? paper.gsm : '70'}gsm)`;
+    updatePaperHint();
+  } else {
+    const pp  = color === 'color' ? pr.colorPerPage : pr.bwPerPage;
+    print     = pr.base + pages * pp * qty;
+    if (size === 'A3')     print *= pr.a3Multi;
+    if (size === 'Custom') print *= pr.customMulti;
+    sizeLabel = size === 'A4' ? '×1 (A4)' : size === 'A3' ? `×${pr.a3Multi} (A3)` : `×${pr.customMulti} (Custom)`;
+  }
+
+  const urg   = urgent             ? pr.urgentFee   : 0;
+  const del   = delivery==='delivery' ? pr.deliveryFee : 0;
+  const total = Math.round((print + urg + del) * 100) / 100;
+  return { pages, qty, color, size, print:Math.round(print * 100) / 100, sizeLabel, urg, del, total };
+}
+
+function updatePrice() {
+  const totals = currentOrderTotals();
+  document.getElementById('p-print').textContent    = '₹' + totals.print;
+  document.getElementById('p-size').textContent     = totals.sizeLabel;
+  document.getElementById('p-urgent').textContent   = totals.urg ? '₹' + totals.urg : '₹0';
+  document.getElementById('p-delivery').textContent = totals.del ? '₹' + totals.del : '₹0';
+  document.getElementById('p-total').textContent    = '₹' + totals.total;
+}
+
+function toggleUrgent() {
+  urgent = !urgent;
+  document.getElementById('urgent-sw').classList.toggle('on', urgent);
+  updatePrice();
+  renderSummary(); // BUG FIX: keep Step-2 summary in sync when user changes urgent on Step 2
+}
+
+function setDelivery(type) {
+  delivery = type;
+  document.getElementById('del-pickup').classList.toggle('on',   type === 'pickup');
+  document.getElementById('del-delivery').classList.toggle('on', type === 'delivery');
+  document.getElementById('address-group').style.display = type === 'delivery' ? 'block' : 'none';
+  updatePrice();
+  renderSummary(); // BUG FIX: keep Step-2 summary in sync when user changes delivery on Step 2
+}
+
+// ── Step Navigation ────────────────────────────────────────
+function goStep(n, skipHistory) {
+  if (n === 2) {
+    // FIXED: Validate file is uploaded to server before proceeding
+    if (!uploadedFile.url) {
+      if (uploadedFile.b64) {
+        showAlert('a-upload', '⚠️ Please click "Upload to Server" to upload your file before continuing');
+      } else {
+        showAlert('a-upload', '⚠️ Please select and upload a file before continuing');
+      }
+      return;
+    }
+    const pages = parseInt(document.getElementById('opt-pages').value);
+    const qty   = parseInt(document.getElementById('opt-qty').value);
+    if (!pages || pages < 1) { showAlert('a-upload','⚠️ Please enter number of pages'); return; }
+    if (!qty   || qty   < 1) { showAlert('a-upload','⚠️ Please enter quantity'); return; }
+    renderSummary();
+  }
+  for (let i = 1; i <= 2; i++) {
+    const el = document.getElementById('step-' + i);
+    if (el) el.style.display = i === n ? 'block' : 'none';
+  }
+  for (let i = 1; i <= 3; i++) {
+    const s = document.getElementById('st-' + i);
+    if (!s) continue;
+    s.classList.remove('active','done');
+    if (i < n) s.classList.add('done');
+    if (i === n) s.classList.add('active');
+  }
+  if (!skipHistory && n > 1) history.pushState({ psView: 'order', psStep: n }, '', '/user?view=order&step=' + n);
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function renderSummary() {
+  const totals = currentOrderTotals();
+  const colorLabel = document.getElementById('opt-color').options[document.getElementById('opt-color').selectedIndex].text;
+  const paper = PAPER_CONFIG && selectedPaperId
+    ? PAPER_CONFIG.paperTypes.find(p => p.id === selectedPaperId)
+    : null;
+  document.getElementById('rs-print').textContent    = '₹' + totals.print;
+  document.getElementById('rs-urgent').textContent   = totals.urg ? '₹' + totals.urg : '₹0';
+  document.getElementById('rs-delivery').textContent = totals.del ? '₹' + totals.del : '₹0';
+  document.getElementById('rs-total').textContent    = '₹' + totals.total;
+  document.getElementById('order-summary').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      ${[['File',uploadedFile.name||'—'],['Pages',totals.pages],['Color',colorLabel],['Size',totals.size],
+         ['Paper',paper ? paper.name : 'Standard'],['Copies',totals.qty],['Urgent',urgent?'Yes ⚡':'No'],
+         ['Delivery',delivery==='delivery'?'Home Delivery 🚚':'Store Pickup 🏪']]
+        .map(([k,v]) => `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px;color:var(--gray)">${esc(k)}</td><td style="padding:8px;font-weight:600">${esc(v)}</td></tr>`).join('')}
+    </table>`;
+}
+
+// ── Place Order — FIX #3: redirects to Payment page ────────
+function placeOrder() {
+  if (delivery === 'delivery') {
+    const addr = document.getElementById('opt-address').value.trim();
+    if (!addr) { showAlert('a-step2','⚠️ Please enter your delivery address'); return; }
+  }
+  setSpinner('btn-place-order', true);
+  const d = {
+    fileUrl  : uploadedFile.url,
+    fileName : uploadedFile.name,
+    pages    : parseInt(document.getElementById('opt-pages').value) || 1,
+    colorType: document.getElementById('opt-color').value,
+    size     : document.getElementById('opt-size').value,
+    paperId  : selectedPaperId,
+    qty      : parseInt(document.getElementById('opt-qty').value) || 1,
+    urgent   : urgent,
+    delivery : delivery,
+    address  : document.getElementById('opt-address').value.trim(),
+    notes    : document.getElementById('opt-notes').value.trim()
+  };
+  google.script.run
+    .withSuccessHandler(r => {
+      setSpinner('btn-place-order', false, 'Place Order & Pay →');
+      if (r.ok) {
+        // FIX #3: redirect to dedicated Payment page instead of inline step
+        localStorage.setItem('ps_pay_order', r.orderId);
+        window.location.href = '/payment?orderId=' + encodeURIComponent(r.orderId);
+      } else {
+        showAlert('a-step2','❌ ' + r.err);
+      }
+    })
+    .withFailureHandler(e => { setSpinner('btn-place-order', false, 'Place Order & Pay →'); showAlert('a-step2','❌ ' + e.message); })
+    .createOrder(d, SESS.userId, SESS.token);
+}
+
+// ── Reset Order Form ───────────────────────────────────────
+function resetOrder() {
+  uploadedFile  = { b64:'', name:'', mime:'', url:'', viewUrl:'' };
+  urgent   = false;
+  delivery = 'pickup';
+  pdfDoc   = null;
+  const ids = ['file-input','opt-notes','opt-address'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('upload-preview').style.display    = 'none';
+  document.getElementById('upload-drive-row').style.display  = 'none';
+  document.getElementById('pdf-preview-area').style.display  = 'none';
+  document.getElementById('upload-status').textContent       = '';
+  const driveBtn = document.getElementById('btn-upload-drive');
+  driveBtn.innerHTML = '☁️ Upload to Server';
+  driveBtn.style.background = '';
+  document.getElementById('opt-pages').value = 1;
+  document.getElementById('opt-qty').value   = 1;
+  document.getElementById('opt-color').value = 'bw';
+  document.getElementById('opt-size').value  = 'A4';
+  document.getElementById('urgent-sw').classList.remove('on');
+  setDelivery('pickup');
+  updatePrice();
+  goStep(1);
+}
+
+// ── Modal close on backdrop ────────────────────────────────
+document.getElementById('order-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Init price
+updatePrice();
+</script>
+</body>
+</html>

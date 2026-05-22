@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — PrintShop Pro</title>
+<style>
+:root{--blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--green:#16a34a;--green-l:#f0fdf4;--amber:#f59e0b;--amber-l:#fffbeb;--red:#dc2626;--red-l:#fef2f2;--purple:#7c3aed;--gray:#6b7280;--gray-l:#f3f4f6;--border:#e5e7eb;--text:#1f2937;--sidebar:#1e293b;--sidebar-hover:#334155;--white:#fff;--shadow:0 4px 20px rgba(0,0,0,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh;display:flex}
+/* SIDEBAR */
+#sidebar{width:240px;background:var(--sidebar);color:#fff;min-height:100vh;position:fixed;left:0;top:0;z-index:100;display:flex;flex-direction:column;transition:transform .3s}
+.sb-logo{padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
+.sb-logo .ico{width:38px;height:38px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sb-logo .t{font-size:15px;font-weight:800}.sb-logo .s{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;padding:12px 8px 6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.75);transition:all .2s;margin-bottom:2px;text-decoration:none}
+.sb-item:hover,.sb-item.on{background:var(--sidebar-hover);color:#fff}
+.sb-item.on{background:var(--blue)!important}
+.sb-item .si{font-size:17px;width:22px;text-align:center;flex-shrink:0}
+.sb-badge{background:var(--red);color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:2px 7px;margin-left:auto;min-width:20px;text-align:center}
+.sb-badge.amber{background:var(--amber)}
+.sb-footer{padding:14px 16px;border-top:1px solid rgba(255,255,255,.08)}
+.sb-user{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sb-av{width:34px;height:34px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.sb-name{font-size:13px;font-weight:600}.sb-role{font-size:11px;color:rgba(255,255,255,.45)}
+.logout-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,.08);border-radius:8px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.7);transition:background .2s;border:none;width:100%}
+.logout-btn:hover{background:var(--red);color:#fff}
+/* MAIN */
+#main{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.topbar-title{font-size:16px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.refresh-btn{padding:7px 14px;background:var(--gray-l);border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--gray);display:flex;align-items:center;gap:6px;transition:all .2s}
+.refresh-btn:hover{background:var(--blue-l);color:var(--blue)}
+.mob-menu{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text)}
+.content{padding:24px;flex:1}
+/* VIEWS */
+.view{display:none}.view.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view.on{animation:fadeIn .25s ease}
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:-24px;right:-24px;width:80px;height:80px;border-radius:50%;opacity:.07}
+.stat.blue::before{background:var(--blue)}.stat.green::before{background:var(--green)}.stat.amber::before{background:var(--amber)}.stat.red::before{background:var(--red)}
+.s-icon{font-size:28px;margin-bottom:8px}.s-val{font-size:30px;font-weight:800}.stat.blue .s-val{color:var(--blue)}.stat.green .s-val{color:var(--green)}.stat.amber .s-val{color:var(--amber)}.stat.red .s-val{color:var(--red)}
+.s-lbl{font-size:12px;color:var(--gray);font-weight:500;margin-top:4px}
+/* CARDS */
+.card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:22px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.search-inp{flex:1;min-width:160px;padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13.5px;outline:none;transition:border-color .2s}
+.search-inp:focus{border-color:var(--blue)}
+.filter-sel{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:#fff;cursor:pointer}
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{padding:10px 14px;text-align:left;font-size:11.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbff}
+.td-id{font-family:monospace;font-size:12px;color:var(--gray)}
+/* BADGES */
+.badge{padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-block}
+.b-green{background:var(--green-l);color:var(--green)}.b-amber{background:var(--amber-l);color:#92400e}
+.b-red{background:var(--red-l);color:var(--red)}.b-blue{background:var(--blue-l);color:var(--blue)}
+.b-purple{background:#f5f3ff;color:var(--purple)}.b-gray{background:var(--gray-l);color:var(--gray)}
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover:not(:disabled){background:var(--blue-d)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover:not(:disabled){background:#15803d}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover:not(:disabled){background:#b91c1c}
+.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--gray)}.btn-ghost:hover{background:var(--gray-l)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{padding:6px;border-radius:6px;background:var(--gray-l);border:none;cursor:pointer;font-size:14px;transition:background .2s}
+.btn-icon:hover{background:var(--border)}
+.btn-full{width:100%;justify-content:center;padding:12px}
+/* FORMS */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13.5px;outline:none;transition:all .2s;background:#fafafa;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.fg textarea{resize:vertical;min-height:60px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:16px}
+.modal-bg.on{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:800}
+.modal-close{cursor:pointer;font-size:22px;color:var(--gray);background:none;border:none;line-height:1}
+/* ORDER DETAIL ROWS */
+.od-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.od-row:last-child{border:none}
+.od-key{color:var(--gray);width:40%}.od-val{font-weight:600;text-align:right;flex:1;word-break:break-all}
+/* STATUS PIPELINE */
+.pipeline{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pipe-btn{padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:700;border:1.5px solid transparent;cursor:pointer;transition:all .2s}
+.pipe-btn:hover{transform:translateY(-1px)}
+/* STATUS BAR */
+.status-bar{display:flex;gap:0;margin:16px 0;overflow-x:auto}
+.sb-step{min-width:90px;text-align:center;position:relative;flex-shrink:0}
+.sb-step::after{content:'';position:absolute;top:12px;left:50%;width:100%;height:2px;background:var(--border)}
+.sb-step:last-child::after{display:none}
+.sb-step.done::after{background:var(--green)}
+.sb-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;position:relative;z-index:1}
+.sb-step.done .sb-dot{background:var(--green);border-color:var(--green);color:#fff}
+.sb-step.active .sb-dot{background:var(--blue);border-color:var(--blue);color:#fff;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.4)}50%{box-shadow:0 0 0 6px rgba(37,99,235,0)}}
+.sb-lbl{font-size:10px;color:var(--gray);margin-top:5px;white-space:nowrap}
+.sb-step.done .sb-lbl,.sb-step.active .sb-lbl{color:var(--blue);font-weight:700}
+/* SWITCH */
+.switch{width:40px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;position:relative;transition:background .2s;display:inline-block;vertical-align:middle}
+.switch.on{background:var(--green)}.switch::after{content:'';width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.on::after{left:21px}
+/* ALERTS */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.alert.err{background:var(--red-l);color:var(--red);border:1px solid #fca5a5}
+.alert.ok{background:var(--green-l);color:var(--green);border:1px solid #86efac}
+/* SPINNER */
+.spinner{display:inline-block;width:15px;height:15px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.spinner-dark{border:2.5px solid rgba(0,0,0,.1);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* EMPTY */
+.empty-state{text-align:center;padding:50px 20px;color:var(--gray)}
+.empty-state .ei{font-size:46px;display:block;margin-bottom:12px}
+/* PAYMENT SCORE PILL */
+.score-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:800}
+.score-pill.high{background:var(--green-l);color:var(--green)}.score-pill.mid{background:var(--amber-l);color:#92400e}.score-pill.low{background:var(--red-l);color:var(--red)}
+/* RESPONSIVE */
+/* FIXED: Hide low-priority columns on mobile to prevent cramped tables */
+/* ── Session Timer ─────────────────────────────────────────── */
+.session-timer{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:var(--blue-l);color:var(--blue);border:1px solid #bfdbfe;transition:background .4s,color .4s,border-color .4s;white-space:nowrap}
+.session-timer.warn{background:#fffbeb;color:#92400e;border-color:#fcd34d}
+.session-timer.danger{background:#fef2f2;color:#dc2626;border-color:#fca5a5;animation:pulse-red 1.2s ease-in-out infinite}
+@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.6}}
+/* ── Session Warning Modal ───────────────────────────────────── */
+.session-modal{background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.session-modal .sm-icon{font-size:48px;margin-bottom:12px}
+.session-modal h3{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.session-modal p{font-size:14px;color:var(--gray);margin-bottom:6px;line-height:1.6}
+.session-modal .sm-time{font-size:36px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums;margin:12px 0}
+.session-modal .sm-btns{display:flex;gap:10px;margin-top:20px;justify-content:center}
+/* ── Expired Overlay ─────────────────────────────────────────── */
+.expired-overlay{position:fixed;inset:0;background:rgba(15,23,42,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.expired-card{background:#fff;border-radius:20px;padding:36px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.expired-card .ex-icon{font-size:56px;margin-bottom:16px}
+.expired-card h2{font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px}
+.expired-card p{font-size:14px;color:var(--gray);margin-bottom:20px;line-height:1.6}
+@media(max-width:640px){
+  .hide-mobile{display:none!important}
+  .pipeline{display:grid;grid-template-columns:1fr 1fr}
+}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}
+.sidebar-open .overlay{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.modal{animation:slideUp .25s ease}
+</style>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="ico">🖨️</div>
+    <div><div class="t">PrintShop Pro</div><div class="s">Admin Panel</div></div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-sec">Main</div>
+    <div class="sb-item on" id="nav-dash"    onclick="gotoView('dash')">   <span class="si">📊</span> Dashboard</div>
+    <div class="sb-item"    id="nav-orders"  onclick="gotoView('orders')"> <span class="si">📦</span> All Orders   <span class="sb-badge" id="nb-orders">0</span></div>
+
+    <!-- FIX #14: Payment Ledger link added to sidebar -->
+    <div class="sb-sec">Payments</div>
+    <div class="sb-item" onclick="window.location.href='/adminpayments'"><span class="si">💳</span> Payment Ledger <span class="sb-badge amber" id="nb-pay">0</span></div>
+
+    <div class="sb-sec">Catalog</div>
+    <div class="sb-item" id="nav-services" onclick="gotoView('services')"><span class="si">🖨️</span> Services</div>
+    <div class="sb-item" id="nav-products" onclick="gotoView('products')"><span class="si">📦</span> Products</div>
+
+    <div class="sb-sec">Requests</div>
+    <div class="sb-item" id="nav-quotes" onclick="gotoView('quotes')"><span class="si">🪧</span> Quote Requests <span class="sb-badge" id="nb-quotes">0</span></div>
+
+    <div class="sb-sec">System</div>
+    <div class="sb-item" id="nav-settings" onclick="gotoView('settings')"><span class="si">⚙️</span> Settings</div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-av">A</div>
+      <div><div class="sb-name">Administrator</div><div class="sb-role">Super Admin</div></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="mob-menu" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <span id="last-refresh" style="font-size:12px;color:var(--gray)"></span>
+      <!-- SESSION TIMER -->
+      <div class="session-timer" id="session-timer" title="Admin session expires in this time">
+        🔒 <span id="session-time">4:00:00</span>
+      </div>
+      <button class="refresh-btn" onclick="refreshCurrent()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- SESSION EXPIRY WARNING MODAL -->
+  <div class="modal-bg" id="modal-session-warn">
+    <div class="session-modal">
+      <div class="sm-icon">⏰</div>
+      <h3>Session Expiring Soon</h3>
+      <p>Your admin session will expire in</p>
+      <div class="sm-time" id="warn-countdown">10:00</div>
+      <p style="font-size:13px">Extend your session to keep working, or logout now to secure the panel.</p>
+      <div class="sm-btns">
+        <button class="btn btn-ghost" onclick="forceLogout()">Logout Now</button>
+        <button class="btn btn-blue" id="btn-extend" onclick="extendSession()">⟳ Extend 4 Hours</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION EXPIRED OVERLAY (full-screen, blocks all interaction) -->
+  <div class="expired-overlay" id="expired-overlay" style="display:none">
+    <div class="expired-card">
+      <div class="ex-icon">🔐</div>
+      <h2>Session Expired</h2>
+      <p>Your 4-hour admin session has ended.<br>Please login again to continue.</p>
+      <button class="btn btn-blue" style="width:100%" onclick="forceLogout()">Back to Login</button>
+    </div>
+  </div>
+
+  <!-- SESSION EXPIRY WARNING MODAL -->
+  <div class="modal-bg" id="modal-session-warn">
+    <div class="session-modal">
+      <div class="sm-icon">⏰</div>
+      <h3>Session Expiring Soon</h3>
+      <p>Your admin session will expire in</p>
+      <div class="sm-time" id="warn-countdown">10:00</div>
+      <p style="font-size:13px">Extend to keep working, or logout now to secure the admin panel.</p>
+      <div class="sm-btns">
+        <button class="btn btn-ghost" onclick="forceLogout()">Logout Now</button>
+        <button class="btn btn-blue" id="btn-extend" onclick="extendSession()">⟳ Extend 4 Hours</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION EXPIRED OVERLAY -->
+  <div class="expired-overlay" id="expired-overlay" style="display:none">
+    <div class="expired-card">
+      <div class="ex-icon">🔐</div>
+      <h2>Session Expired</h2>
+      <p>Your 4-hour admin session has ended.<br>Please login again to continue.</p>
+      <button class="btn btn-blue" style="width:100%;margin-top:4px" onclick="forceLogout()">Back to Login</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ════ DASHBOARD ════ -->
+    <div class="view on" id="view-dash">
+      <div class="stats-grid">
+        <div class="stat blue"><div class="s-icon">📦</div><div class="s-val" id="ds-total">—</div><div class="s-lbl">Total Orders</div></div>
+        <div class="stat amber"><div class="s-icon">⏳</div><div class="s-val" id="ds-pending">—</div><div class="s-lbl">Payments Pending</div></div>
+        <div class="stat green"><div class="s-icon">✅</div><div class="s-val" id="ds-done">—</div><div class="s-lbl">Delivered</div></div>
+        <div class="stat red"><div class="s-icon">💰</div><div class="s-val" id="ds-rev">—</div><div class="s-lbl">Today's Revenue</div></div>
+      </div>
+      <!-- Status Breakdown -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">📈 Orders by Status</div></div>
+        <div id="status-breakdown" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+      </div>
+      <!-- Recent Orders -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🕐 Recent Orders</div>
+          <button class="btn btn-ghost btn-sm" onclick="gotoView('orders')">View All →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Email</th><th>Amount</th><th>Status</th><th>Payment</th><th>Score</th><th>Action</th></tr></thead>
+            <tbody id="recent-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ ALL ORDERS ════ -->
+    <div class="view" id="view-orders">
+      <div class="toolbar">
+        <input class="search-inp" type="text" placeholder="🔍 Search order ID, email…" id="order-search" oninput="filterOrders()">
+        <select class="filter-sel" id="f-status" onchange="filterOrders()">
+          <option value="">All Statuses</option>
+          <option>Pending Payment</option><option>Pending Verification</option>
+          <option>Accepted</option><option>Printing</option>
+          <option>Ready</option><option>Delivered</option>
+          <option>Payment Rejected</option><option>Payment Expired</option>
+        </select>
+        <select class="filter-sel" id="f-pay" onchange="filterOrders()">
+          <option value="">All Payments</option>
+          <option>Unpaid</option><option>Under Review</option>
+          <option>Paid</option><option>Rejected</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Email</th><th class="hide-mobile">Pages</th><th class="hide-mobile">Type</th><th>Total</th><th class="hide-mobile">Delivery</th><th>Status</th><th>Payment</th><th>Score</th><th class="hide-mobile">Date</th><th>Actions</th></tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="orders-empty" style="display:none"><span class="ei">📭</span><h3>No orders found</h3></div>
+      </div>
+    </div>
+
+    <!-- ════ SERVICES ════ -->
+    <div class="view" id="view-services">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+        <button class="btn btn-blue" onclick="openServiceModal()">+ Add Service</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Description</th><th>Base ₹</th><th>B&amp;W /pg</th><th>Color /pg</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody id="services-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PRODUCTS ════ -->
+    <div class="view" id="view-products">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+        <button class="btn btn-blue" onclick="openProductModal()">+ Add Product</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Description</th><th>Price ₹</th><th>Stock</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SETTINGS — Configuration Page (FIXED: now exists!) ════ -->
+    <div class="view" id="view-settings">
+
+      <!-- SHOP OPEN / CLOSED TOGGLE -->
+      <div class="card" style="max-width:680px">
+        <div class="card-header"><div class="card-title">🔌 Shop Status</div></div>
+        <div class="shop-toggle" id="shop-status-toggle" onclick="toggleShopOpen()">
+          <div class="toggle-big on" id="shop-toggle-knob"><div class="knob"></div></div>
+          <div style="flex:1">
+            <div style="font-size:15px;font-weight:700" id="shop-status-label">🟢 Shop is Open</div>
+            <div style="font-size:13px;opacity:.7;margin-top:2px" id="shop-status-sub">Customers can place orders</div>
+          </div>
+        </div>
+        <div class="fg" id="closed-msg-group" style="display:none">
+          <label>Message shown to customers when closed</label>
+          <textarea id="cfg-closed-msg" rows="2" style="resize:vertical" placeholder="We are temporarily closed for maintenance. Back soon!"></textarea>
+          <button class="btn btn-blue" style="margin-top:8px" onclick="saveClosedMsg()">Save Message</button>
+        </div>
+      </div>
+
+      <!-- PAPER CONFIGURATION -->
+      <div class="card" style="max-width:900px">
+        <div class="card-header">
+          <div class="card-title">📄 Paper Types & GSM Pricing</div>
+          <button class="btn btn-ghost btn-sm" onclick="addPaperRow()">+ Add Paper Type</button>
+        </div>
+        <div class="alert err" id="a-settings" style="display:none"></div>
+        <div style="overflow-x:auto">
+          <div class="paper-type-hdr paper-type-row" style="font-size:11px">
+            <span>Paper Name</span><span>GSM</span><span>A4 ₹</span><span>A3 ₹</span><span>A5 ₹</span><span>Active</span><span></span>
+          </div>
+          <div id="paper-rows"></div>
+        </div>
+        <div class="row-2" style="margin-top:14px">
+          <div class="fg"><label>B&amp;W Ink Cost per Page ₹</label><input type="number" id="cfg-ink-bw" min="0" step="0.5" value="1.0"></div>
+          <div class="fg"><label>Color Ink Cost per Page ₹</label><input type="number" id="cfg-ink-color" min="0" step="0.5" value="4.0"></div>
+        </div>
+        <button class="btn btn-blue" id="btn-save-paper" onclick="savePaperConfig()">💾 Save Paper Config</button>
+      </div>
+
+      <div class="card" style="max-width:680px">
+        <div class="card-header"><div class="card-title">⚙️ Pricing & Payment</div></div>
+        <div class="row-2">
+          <div class="fg"><label>Shop Name</label><input type="text" id="cfg-name" placeholder="PrintShop Pro"></div>
+          <div class="fg"><label>UPI ID</label><input type="text" id="cfg-upi" placeholder="yourname@paytm" style="font-family:monospace"></div>
+        </div>
+      </div>
+      <div class="card" style="max-width:680px">
+        <div class="card-header"><div class="card-title">💰 Pricing</div></div>
+        <div class="row-3">
+          <div class="fg"><label>Base Fee (₹)</label><input type="number" id="cfg-base" min="0" step="0.5"></div>
+          <div class="fg"><label>B&amp;W per Page (₹)</label><input type="number" id="cfg-bw" min="0" step="0.1"></div>
+          <div class="fg"><label>Color per Page (₹)</label><input type="number" id="cfg-color" min="0" step="0.5"></div>
+        </div>
+        <div class="row-3">
+          <div class="fg"><label>A3 Multiplier</label><input type="number" id="cfg-a3" min="1" step="0.1"></div>
+          <div class="fg"><label>Custom Multiplier</label><input type="number" id="cfg-custom" min="1" step="0.1"></div>
+          <div class="fg"></div>
+        </div>
+        <div class="row-2">
+          <div class="fg"><label>Urgent Fee (₹)</label><input type="number" id="cfg-urgent" min="0" step="5"></div>
+          <div class="fg"><label>Delivery Fee (₹)</label><input type="number" id="cfg-delivery" min="0" step="5"></div>
+        </div>
+      </div>
+      <div class="card" style="max-width:680px">
+        <div class="card-header"><div class="card-title">💳 Payment Verification</div></div>
+        <div class="row-2">
+          <div class="fg"><label>QR Expiry (minutes)</label><input type="number" id="cfg-qr" min="5" max="60" step="5"></div>
+          <div class="fg"><label>Max Retry Attempts</label><input type="number" id="cfg-retry" min="1" max="10"></div>
+        </div>
+        <div class="row-2">
+          <div class="fg"><label>Auto-Approve Score (≥)</label><input type="number" id="cfg-approve" min="50" max="100"></div>
+          <div class="fg"><label>Needs-Review Score (≥)</label><input type="number" id="cfg-review" min="0" max="90"></div>
+        </div>
+        <div style="background:var(--blue-l);border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:13px;color:var(--blue);margin-bottom:14px">
+          ℹ️ Score &lt; Needs-Review → Auto Rejected · Score ≥ Auto-Approve → Auto Approved · Between → Manual Review
+        </div>
+      </div>
+      <div style="max-width:680px;display:flex;gap:10px;justify-content:flex-end;margin-bottom:20px">
+        <button class="btn btn-ghost" onclick="loadSettings()">↺ Reset to Saved</button>
+        <button class="btn btn-blue" id="btn-save-settings" onclick="saveSettings()">💾 Save Settings</button>
+      </div>
+
+      <!-- ── SHOP INFO ── -->
+      <div class="card" style="max-width:680px">
+        <div class="card-header"><div class="card-title">🏪 Shop Info (shown on public page)</div></div>
+        <div class="row-2">
+          <div class="fg"><label>Address</label><input type="text" id="cfg-address" placeholder="123 Main St, City"></div>
+          <div class="fg"><label>Phone Number</label><input type="text" id="cfg-phone" placeholder="+91 98765 43210"></div>
+        </div>
+        <div class="row-2">
+          <div class="fg"><label>Email</label><input type="email" id="cfg-email" placeholder="shop@example.com"></div>
+          <div class="fg"><label>Operating Hours</label><input type="text" id="cfg-hours" placeholder="Mon–Sat 9AM–8PM"></div>
+        </div>
+        <div class="row-2">
+          <div class="fg"><label>Tagline</label><input type="text" id="cfg-tagline" placeholder="Professional Printing Services"></div>
+          <div class="fg"><label>Logo Emoji</label><input type="text" id="cfg-logo" placeholder="🖨️" maxlength="4"></div>
+        </div>
+        <button class="btn btn-blue" id="btn-save-info" onclick="saveShopInfo()">💾 Save Shop Info</button>
+      </div>
+
+      <!-- ── POSTER PRICING ── -->
+      <div class="card" style="max-width:680px">
+        <div class="card-header"><div class="card-title">🪧 Poster / Banner Pricing (per sq.ft)</div></div>
+        <div id="poster-pricing-rows"></div>
+        <div class="fg" style="margin-top:12px">
+          <label>Pricing Note (shown to customers)</label>
+          <textarea id="cfg-poster-note" rows="2" style="resize:vertical" placeholder="Final price confirmed after review. Advance required."></textarea>
+        </div>
+        <div class="fg"><label>Design Cost (if customer needs design) ₹</label>
+          <input type="number" id="cfg-design-cost" min="0" step="50" placeholder="250"></div>
+        <button class="btn btn-blue" id="btn-save-poster" onclick="savePosterPricing()">💾 Save Poster Pricing</button>
+      </div>
+
+    </div>
+
+    <!-- ════ QUOTE REQUESTS ════ -->
+    <div class="view" id="view-quotes">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-sm" id="qf-all"       onclick="filterQuotes('all')"       style="background:var(--blue);color:#fff">All</button>
+        <button class="btn btn-ghost btn-sm" id="qf-Pending"   onclick="filterQuotes('Pending')">Pending</button>
+        <button class="btn btn-ghost btn-sm" id="qf-Contacted" onclick="filterQuotes('Contacted')">Contacted</button>
+        <button class="btn btn-ghost btn-sm" id="qf-Quoted"    onclick="filterQuotes('Quoted')">Quoted</button>
+        <button class="btn btn-ghost btn-sm" id="qf-Ordered"   onclick="filterQuotes('Ordered')">Ordered</button>
+      </div>
+      <div id="quotes-list"><div style="text-align:center;padding:40px;color:var(--gray)">Loading…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-bg" id="modal-order">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="mod-title">Order Details</div>
+      <button class="modal-close" onclick="closeModal('modal-order')">✕</button>
+    </div>
+    <div id="mod-body"></div>
+  </div>
+</div>
+
+<!-- SERVICE MODAL -->
+<div class="modal-bg" id="modal-svc">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="svc-modal-title">Add Service</div>
+      <button class="modal-close" onclick="closeModal('modal-svc')">✕</button>
+    </div>
+    <div class="alert err" id="a-svc" style="display:none"></div>
+    <div class="fg"><label>Name</label><input type="text" id="svc-name" placeholder="e.g. Standard Printing"></div>
+    <div class="fg"><label>Description</label><textarea id="svc-desc" placeholder="Brief description…"></textarea></div>
+    <div class="row-3">
+      <div class="fg"><label>Base ₹</label><input type="number" id="svc-base" min="0" step="0.5" value="10"></div>
+      <div class="fg"><label>B&amp;W /pg</label><input type="number" id="svc-bw" min="0" step="0.1" value="1.5"></div>
+      <div class="fg"><label>Color /pg</label><input type="number" id="svc-col" min="0" step="0.5" value="5"></div>
+    </div>
+    <input type="hidden" id="svc-id">
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-svc')">Cancel</button>
+      <button class="btn btn-blue" id="btn-save-svc" onclick="saveService()">Save Service</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-bg" id="modal-prd">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="prd-modal-title">Add Product</div>
+      <button class="modal-close" onclick="closeModal('modal-prd')">✕</button>
+    </div>
+    <div class="alert err" id="a-prd" style="display:none"></div>
+    <div class="fg"><label>Name</label><input type="text" id="prd-name" placeholder="e.g. Spiral Binding"></div>
+    <div class="fg"><label>Description</label><textarea id="prd-desc"></textarea></div>
+    <div class="row-2">
+      <div class="fg"><label>Price ₹</label><input type="number" id="prd-price" min="0" value="0"></div>
+      <div class="fg"><label>Stock</label><input type="number" id="prd-stock" min="0" value="100"></div>
+    </div>
+    <input type="hidden" id="prd-id">
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-prd')">Cancel</button>
+      <button class="btn btn-blue" id="btn-save-prd" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="modal-confirm">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><div class="modal-title" id="conf-title">Confirm</div></div>
+    <p id="conf-msg" style="color:var(--gray);margin-bottom:20px;font-size:14px"></p>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+      <button class="btn" id="conf-btn" onclick="confirmAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Auth guard ─────────────────────────────────────────────
+const SESS = JSON.parse(localStorage.getItem('ps_session') || 'null');
+if (!SESS || SESS.role !== 'admin') { window.location.href = '/'; }
+
+// ── Session expiry check on load ───────────────────────────
+(function checkOnLoad() {
+  if (!SESS || !SESS.expiresAt) return;
+  if (new Date(SESS.expiresAt) < new Date()) {
+    localStorage.removeItem('ps_session');
+    window.location.href = '/';
+  }
+})();
+
+let allOrders   = [];
+let allServices = [];
+let allProducts = [];
+let currentView = 'dash';
+let confirmCb   = null;
+let _sessionTimerInterval = null;
+let _warnModalOpen        = false;
+const esc = v => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// ── Helpers ────────────────────────────────────────────────
+function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+
+// ── 4-Hour Session Timer ───────────────────────────────────
+function startSessionTimer() {
+  if (_sessionTimerInterval) clearInterval(_sessionTimerInterval);
+  // If no expiresAt stored (very old session before this feature), set 4h from now
+  if (!SESS.expiresAt) {
+    SESS.expiresAt = new Date(Date.now() + 4 * 3600000).toISOString();
+    localStorage.setItem('ps_session', JSON.stringify(SESS));
+  }
+  const expiresAt = new Date(SESS.expiresAt);
+  const tick = () => {
+    const rem    = expiresAt - Date.now();
+    const timerEl = document.getElementById('session-timer');
+    const timeEl  = document.getElementById('session-time');
+    if (rem <= 0) {
+      clearInterval(_sessionTimerInterval);
+      if (timeEl)  timeEl.textContent = '0:00:00';
+      if (timerEl) timerEl.className  = 'session-timer danger';
+      showExpiredOverlay();
+      return;
+    }
+    const h = Math.floor(rem / 3600000);
+    const m = Math.floor((rem % 3600000) / 60000);
+    const s = Math.floor((rem % 60000) / 1000);
+    if (timeEl)  timeEl.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (timerEl) {
+      if      (rem < 5 * 60000)  timerEl.className = 'session-timer danger';
+      else if (rem < 15 * 60000) timerEl.className = 'session-timer warn';
+      else                       timerEl.className = 'session-timer';
+    }
+    // Open warning modal once at ~10 minutes remaining
+    // BUG FIX: simple check — no narrow window that can be missed in background tabs
+    if (rem < 10 * 60000 && !_warnModalOpen) openSessionWarnModal();
+    // Live-update countdown inside the modal if open
+    if (_warnModalOpen) {
+      const wm = Math.floor(rem / 60000);
+      const ws = Math.floor((rem % 60000) / 1000);
+      const wEl = document.getElementById('warn-countdown');
+      if (wEl) wEl.textContent = `${wm}:${String(ws).padStart(2,'0')}`;
+    }
+  };
+  tick();
+  _sessionTimerInterval = setInterval(tick, 1000);
+}
+
+function openSessionWarnModal() {
+  _warnModalOpen = true;
+  document.getElementById('modal-session-warn').classList.add('on');
+}
+
+function showExpiredOverlay() {
+  document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('on'));
+  _warnModalOpen = false;
+  document.getElementById('expired-overlay').style.display = 'flex';
+}
+
+function extendSession() {
+  const btn = document.getElementById('btn-extend');
+  btn.disabled = true; btn.textContent = '⏳ Extending…';
+  google.script.run
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = '⟳ Extend 4 Hours';
+      if (r.ok) {
+        SESS.expiresAt = r.expiresAt;
+        localStorage.setItem('ps_session', JSON.stringify(SESS));
+        document.getElementById('modal-session-warn').classList.remove('on');
+        _warnModalOpen = false;
+        startSessionTimer();
+        toast('✅ Session extended by 4 hours');
+      } else {
+        toast('❌ Could not extend — please login again', true);
+        setTimeout(forceLogout, 2500);
+      }
+    })
+    .withFailureHandler(() => { btn.disabled = false; btn.textContent = '⟳ Extend 4 Hours'; toast('❌ Extend failed', true); })
+    .refreshAdminSession(SESS.token);
+}
+
+function forceLogout() {
+  clearInterval(_sessionTimerInterval);
+  localStorage.removeItem('ps_session');
+  window.location.href = '/home';
+}
+
+function logout() { forceLogout(); }
+
+function showAlert(id, msg, type='err') {
+  const el = document.getElementById(id); if (!el) return;
+  el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+function setSpinner(id, loading, label) {
+  const btn = document.getElementById(id); if (!btn) return;
+  btn.disabled = loading;
+  if (loading) { btn.dataset.orig = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span> Please wait…'; }
+  else btn.innerHTML = btn.dataset.orig || label || btn.innerHTML;
+}
+function openModal(id)  { document.getElementById(id).classList.add('on'); }
+function closeModal(id) { document.getElementById(id).classList.remove('on'); }
+function askConfirm(title, msg, btnText, btnClass, cb) {
+  document.getElementById('conf-title').textContent = title;
+  document.getElementById('conf-msg').textContent   = msg;
+  const btn = document.getElementById('conf-btn');
+  btn.textContent = btnText; btn.className = 'btn ' + btnClass;
+  confirmCb = cb; openModal('modal-confirm');
+}
+function confirmAction() { closeModal('modal-confirm'); if (confirmCb) { confirmCb(); confirmCb = null; } }
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function markRefresh() {
+  document.getElementById('last-refresh').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── Navigation ─────────────────────────────────────────────
+const viewTitles = { dash:'Dashboard', orders:'All Orders', services:'Services', products:'Products', quotes:'🪧 Quote Requests', settings:'⚙️ Settings' };
+function gotoView(v) {
+  currentView = v;
+  ['dash','orders','services','products','quotes','settings'].forEach(id => {
+    document.getElementById('view-' + id).classList.toggle('on', id === v);
+    const n = document.getElementById('nav-' + id);
+    if (n) n.classList.toggle('on', id === v);
+  });
+  document.getElementById('topbar-title').textContent = viewTitles[v] || v;
+  document.body.classList.remove('sidebar-open');
+  if (v === 'dash')     loadDashboard();
+  if (v === 'orders')   loadOrders();
+  if (v === 'services') loadServices();
+  if (v === 'products') loadProducts();
+  if (v === 'quotes')   loadQuoteRequests();
+  if (v === 'settings') {
+    loadSettings();
+    loadShopStatus();
+    loadPaperConfig();
+    loadPosterPricing();
+  }
+}
+function refreshCurrent() { gotoView(currentView); }
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function loadDashboard() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      const s = r.stats;
+      document.getElementById('ds-total').textContent   = s.total       || 0;
+      document.getElementById('ds-pending').textContent = s.pending     || 0;
+      document.getElementById('ds-done').textContent    = s.completed   || 0;
+      document.getElementById('ds-rev').textContent     = '₹' + (s.revenue || 0);
+      document.getElementById('nb-orders').textContent  = s.total       || 0;
+      // FIX #8: pending count from PaymentLedger via stats
+      document.getElementById('nb-pay').textContent     = s.pending     || 0;
+
+      const colors = {'Pending Payment':'b-amber','Pending Verification':'b-blue','Accepted':'b-blue',
+        'Printing':'b-purple','Ready':'b-green','Delivered':'b-green',
+        'Payment Rejected':'b-red','Payment Expired':'b-gray'};
+      document.getElementById('status-breakdown').innerHTML =
+        Object.entries(s.byStatus || {}).map(([st, cnt]) =>
+          `<div style="background:#f8fafc;border-radius:10px;padding:10px 16px;text-align:center;min-width:120px">
+            <div style="font-size:22px;font-weight:800">${esc(cnt)}</div>
+            <span class="badge ${colors[st]||'b-gray'}" style="margin-top:4px">${esc(st)}</span>
+          </div>`).join('');
+
+      const tbody = document.getElementById('recent-tbody');
+      if (!s.recent || !s.recent.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray)">No orders yet</td></tr>';
+        return;
+      }
+      // FIX #8: recent orders show score from PaymentLedger join
+      tbody.innerHTML = s.recent.map(o => `
+        <tr>
+          <td class="td-id">${esc(o.order_id)}</td>
+          <td style="font-size:12.5px">${esc(o.user_email||'—')}</td>
+          <td style="font-weight:700">₹${esc(o.total_price)}</td>
+          <td>${statusBadge(o.status)}</td>
+          <td>${payBadge(o.payment_status)}</td>
+          <td>—</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="loadOrdersAndView('${esc(o.order_id)}')">View</button></td>
+        </tr>`).join('');
+      markRefresh();
+    })
+    .withFailureHandler(() => {})
+    .adminGetStats(SESS.token);
+}
+
+// FIXED: No more setTimeout race — viewOrder() fires inside the success handler
+// after allOrders is guaranteed to be populated.
+function loadOrdersAndView(orderId) {
+  currentView = 'orders';
+  ['dash','orders','services','products','quotes','settings'].forEach(id => {
+    document.getElementById('view-' + id).classList.toggle('on', id === 'orders');
+    const n = document.getElementById('nav-' + id);
+    if (n) n.classList.toggle('on', id === 'orders');
+  });
+  document.getElementById('topbar-title').textContent = 'All Orders';
+  document.body.classList.remove('sidebar-open');
+  const tbody = document.getElementById('orders-tbody');
+  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--gray)"><span class="spinner spinner-dark" style="width:24px;height:24px;display:inline-block;vertical-align:middle;margin-right:8px"></span>Loading…</td></tr>';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      allOrders = r.orders || [];
+      renderOrders(allOrders);
+      markRefresh();
+      viewOrder(orderId); // Safe: allOrders is now populated
+    })
+    .withFailureHandler(() => {})
+    .adminGetAllOrders(SESS.token);
+}
+
+// ── ALL ORDERS ─────────────────────────────────────────────
+function loadOrders() {
+  const tbody = document.getElementById('orders-tbody');
+  tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--gray)"><span class="spinner spinner-dark" style="width:24px;height:24px;display:inline-block;vertical-align:middle;margin-right:8px"></span>Loading…</td></tr>';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) { tbody.innerHTML = `<tr><td colspan="11" style="color:var(--red);padding:20px">${r.err}</td></tr>`; return; }
+      allOrders = r.orders || [];
+      renderOrders(allOrders);
+      markRefresh();
+    })
+    .withFailureHandler(e => { tbody.innerHTML = `<tr><td colspan="11" style="color:var(--red);padding:20px">Error: ${e.message}</td></tr>`; })
+    .adminGetAllOrders(SESS.token);
+}
+
+function filterOrders() {
+  const q   = document.getElementById('order-search').value.toLowerCase();
+  const st  = document.getElementById('f-status').value;
+  const pay = document.getElementById('f-pay').value;
+  renderOrders(allOrders.filter(o => {
+    const mq  = !q  || o.order_id.toLowerCase().includes(q) || (o.user_email||'').toLowerCase().includes(q);
+    const ms  = !st  || o.status === st;
+    const mp  = !pay || o.payment_status === pay;
+    return mq && ms && mp;
+  }));
+}
+
+function renderOrders(orders) {
+  const tbody = document.getElementById('orders-tbody');
+  const empty = document.getElementById('orders-empty');
+  if (!orders.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = orders.map(o => {
+    const score    = o.payment ? parseInt(o.payment.score)||0 : null;
+    const scorePill= score !== null ? `<span class="score-pill ${score>=80?'high':score>=50?'mid':'low'}">${score}</span>` : '—';
+    return `<tr>
+      <td class="td-id" style="cursor:pointer;color:var(--blue)" onclick="viewOrder('${esc(o.order_id)}')">${esc(o.order_id)}</td>
+      <td style="font-size:12.5px">${esc(o.user_email||'—')}</td>
+      <td class="hide-mobile">${esc(o.pages)}</td>
+      <td class="hide-mobile" style="font-size:12px">${o.color_type==='color'?'🎨 Color':'⚫ B&W'}</td>
+      <td style="font-weight:700">₹${esc(o.total_price)}</td>
+      <td class="hide-mobile" style="font-size:12px">${o.delivery_type==='delivery'?'🚚':'🏪'} ${esc(o.delivery_type)}</td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${payBadge(o.payment_status)}</td>
+      <td>${scorePill}</td>
+      <td class="hide-mobile" style="font-size:12px">${fmtDate(o.created_at)}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn-icon" title="View" onclick="viewOrder('${esc(o.order_id)}')">👁</button>
+        ${o.file_url?`<a href="${esc(o.file_url)}" target="_blank" rel="noopener" class="btn-icon" title="Download">📥</a>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ORDER DETAIL MODAL ─────────────────────────────────────
+function viewOrder(orderId) {
+  const o = allOrders.find(x => x.order_id === orderId);
+  if (!o) { loadOrders(); return; }
+  const statuses = ['Pending Payment','Accepted','Printing','Ready','Delivered'];
+  const curIdx   = statuses.indexOf(o.status);
+  const stepsHtml = `<div class="status-bar">${statuses.map((s,i) =>
+    `<div class="sb-step ${i<curIdx?'done':i===curIdx?'active':''}">
+      <div class="sb-dot">${i<curIdx?'✓':i+1}</div>
+      <div class="sb-lbl">${s}</div>
+    </div>`).join('')}</div>`;
+
+  // FIX #8: payment info now reads from PaymentLedger join
+  const p = o.payment;
+  const payInfo = p ? `
+    <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:14px;margin:14px 0">
+      <div style="font-weight:700;margin-bottom:8px;color:#92400e">💳 Payment Details</div>
+      <div class="od-row"><span class="od-key">Payment ID</span><span class="od-val">${esc(p.payment_id||'—')}</span></div>
+      <div class="od-row"><span class="od-key">UPI Ref</span><span class="od-val" style="font-family:monospace">${esc(p.upi_ref||'—')}</span></div>
+      <div class="od-row"><span class="od-key">Score</span><span class="od-val">${esc(p.score||'—')}/100</span></div>
+      <div class="od-row"><span class="od-key">Auto Status</span><span class="od-val">${esc(p.auto_status||'—')}</span></div>
+      <div class="od-row"><span class="od-key">Admin Status</span><span class="od-val">${esc(p.admin_status||'—')}</span></div>
+      ${p.screenshot_url?`<div class="od-row"><span class="od-key">Screenshot</span><span class="od-val"><a href="${esc(p.screenshot_url)}" target="_blank" rel="noopener" style="color:var(--blue)">📸 View</a></span></div>`:''}
+    </div>` : '';
+
+  const nextStatuses = ['Accepted','Printing','Ready','Delivered'];
+  const clrMap = { 'Accepted':'#2563eb','Printing':'#7c3aed','Ready':'#f59e0b','Delivered':'#16a34a' };
+  const pipelineHtml = `
+    <div style="margin:14px 0">
+      <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:8px;text-transform:uppercase">Update Status</div>
+      <div class="pipeline">${nextStatuses.map(s => {
+        const isCur = o.status === s;
+        const c = clrMap[s]||'#6b7280';
+        return `<button class="pipe-btn" style="background:${isCur?c:'transparent'};color:${isCur?'#fff':c};border-color:${c}" onclick="updateStatus('${esc(o.order_id)}','${s}')">${isCur?'✓ ':''}${s}</button>`;
+      }).join('')}</div>
+    </div>`;
+
+  document.getElementById('mod-title').textContent = 'Order #' + orderId;
+  document.getElementById('mod-body').innerHTML = `
+    ${stepsHtml}
+    ${[['Email',o.user_email||'—'],['File',o.file_name||'N/A'],['Pages',o.pages],['Color',o.color_type==='color'?'🎨 Color':'⚫ B&W'],['Size',o.size],['Quantity',o.quantity],['Urgent',o.urgent],['Delivery',o.delivery_type],['Address',o.address||'—'],['Notes',o.notes||'—'],['Total','₹'+o.total_price],['Created',fmtDate(o.created_at)]]
+      .map(([k,v])=>`<div class="od-row"><span class="od-key">${esc(k)}</span><span class="od-val">${esc(v)}</span></div>`).join('')}
+    ${o.file_url?`<a href="${esc(o.file_url)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="margin:10px 0;display:inline-flex">📥 Download Print File</a>`:''}
+    ${payInfo}
+    ${pipelineHtml}
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <a href="/adminpayments" class="btn btn-blue btn-sm">💳 Open Payment Ledger</a>
+    </div>`;
+  openModal('modal-order');
+}
+
+function updateStatus(orderId, status) {
+  google.script.run
+    .withSuccessHandler(r => {
+      closeModal('modal-order');
+      if (r.ok) {
+        const o = allOrders.find(x => x.order_id === orderId);
+        if (o) o.status = status;
+        renderOrders(allOrders);
+        toast('✅ Status updated to: ' + status);
+      } else { toast('❌ ' + r.err, true); }
+    })
+    .withFailureHandler(e => toast('❌ ' + e.message, true))
+    .adminUpdateStatus(orderId, status, SESS.token);
+}
+
+// ── SERVICES ──────────────────────────────────────────────
+function loadServices() {
+  google.script.run
+    .withSuccessHandler(r => { if (r.ok) { allServices = r.services||[]; renderServices(); } })
+    .withFailureHandler(() => {})
+    .getServicesData();
+}
+
+function renderServices() {
+  const tbody = document.getElementById('services-tbody');
+  if (!allServices.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray)">No services yet</td></tr>'; return; }
+  tbody.innerHTML = allServices.map(s => `
+    <tr>
+      <td style="font-weight:700">${s.name}</td>
+      <td style="font-size:12.5px;color:var(--gray)">${s.description||'—'}</td>
+      <td>₹${s.base_price}</td><td>₹${s.bw_per_page}</td><td>₹${s.color_per_page}</td>
+      <td><div class="switch ${String(s.active)==='true'||String(s.active)==='TRUE'?'on':''}" onclick="toggleService('${s.service_id}',this)"></div></td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn-icon" onclick="openServiceModal('${s.service_id}')">✏️</button>
+        <button class="btn-icon" onclick="deleteService('${s.service_id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openServiceModal(id='') {
+  document.getElementById('svc-modal-title').textContent = id ? 'Edit Service' : 'Add Service';
+  document.getElementById('svc-id').value = id;
+  document.getElementById('a-svc').style.display = 'none';
+  if (id) {
+    const s = allServices.find(x => x.service_id === id);
+    if (s) { document.getElementById('svc-name').value=s.name; document.getElementById('svc-desc').value=s.description||''; document.getElementById('svc-base').value=s.base_price; document.getElementById('svc-bw').value=s.bw_per_page; document.getElementById('svc-col').value=s.color_per_page; }
+  } else { ['svc-name','svc-desc'].forEach(i=>document.getElementById(i).value=''); document.getElementById('svc-base').value=10; document.getElementById('svc-bw').value=1.5; document.getElementById('svc-col').value=5; }
+  openModal('modal-svc');
+}
+
+function saveService() {
+  const n=document.getElementById('svc-name').value.trim(), d=document.getElementById('svc-desc').value.trim();
+  const b=parseFloat(document.getElementById('svc-base').value)||0, bw=parseFloat(document.getElementById('svc-bw').value)||0, col=parseFloat(document.getElementById('svc-col').value)||0;
+  const id=document.getElementById('svc-id').value;
+  if (!n) { showAlert('a-svc','⚠️ Service name is required'); return; }
+  setSpinner('btn-save-svc', true);
+  const cb = r => { setSpinner('btn-save-svc',false,'Save Service'); if(r.ok){closeModal('modal-svc');loadServices();toast('✅ Service saved!');}else{showAlert('a-svc','❌ '+r.err);} };
+  if (id) google.script.run.withSuccessHandler(cb).withFailureHandler(e=>{setSpinner('btn-save-svc',false,'Save Service');showAlert('a-svc','❌ '+e.message);}).updateServiceData(id,n,d,b,bw,col,true,SESS.token);
+  else    google.script.run.withSuccessHandler(cb).withFailureHandler(e=>{setSpinner('btn-save-svc',false,'Save Service');showAlert('a-svc','❌ '+e.message);}).addServiceData(n,d,b,bw,col,SESS.token);
+}
+
+function deleteService(id) {
+  askConfirm('Delete Service','Delete this service permanently?','Delete','btn-red',()=>{
+    google.script.run.withSuccessHandler(r=>{if(r.ok){loadServices();toast('🗑️ Deleted');}}).withFailureHandler(()=>{}).deleteServiceData(id,SESS.token);
+  });
+}
+
+// FIXED: debounce prevents double-click race on toggle
+function toggleService(id, el) {
+  if (el.dataset.loading === 'true') return;
+  const s = allServices.find(x => x.service_id === id); if (!s) return;
+  const now = el.classList.toggle('on');
+  el.dataset.loading = 'true'; el.style.opacity = '0.5';
+  google.script.run
+    .withSuccessHandler(() => { if (s) s.active=now; el.dataset.loading='false'; el.style.opacity=''; })
+    .withFailureHandler(() => { el.classList.toggle('on',!now); el.dataset.loading='false'; el.style.opacity=''; })
+    .updateServiceData(id,s.name,s.description,s.base_price,s.bw_per_page,s.color_per_page,now,SESS.token);
+}
+
+// ── PRODUCTS ──────────────────────────────────────────────
+function loadProducts() {
+  google.script.run
+    .withSuccessHandler(r=>{if(r.ok){allProducts=r.products||[];renderProducts();}})
+    .withFailureHandler(()=>{})
+    .getProductsData();
+}
+
+function renderProducts() {
+  const tbody = document.getElementById('products-tbody');
+  if (!allProducts.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray)">No products yet</td></tr>'; return; }
+  tbody.innerHTML = allProducts.map(p=>`
+    <tr>
+      <td style="font-weight:700">${p.name}</td>
+      <td style="font-size:12.5px;color:var(--gray)">${p.description||'—'}</td>
+      <td>₹${p.price}</td><td>${p.stock}</td>
+      <td><div class="switch ${String(p.active)==='true'||String(p.active)==='TRUE'?'on':''}" onclick="toggleProduct('${p.product_id}',this)"></div></td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn-icon" onclick="openProductModal('${p.product_id}')">✏️</button>
+        <button class="btn-icon" onclick="deleteProduct('${p.product_id}')">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openProductModal(id='') {
+  document.getElementById('prd-modal-title').textContent = id ? 'Edit Product' : 'Add Product';
+  document.getElementById('prd-id').value = id;
+  document.getElementById('a-prd').style.display = 'none';
+  if (id) {
+    const p=allProducts.find(x=>x.product_id===id);
+    if(p){document.getElementById('prd-name').value=p.name;document.getElementById('prd-desc').value=p.description||'';document.getElementById('prd-price').value=p.price;document.getElementById('prd-stock').value=p.stock;}
+  } else {['prd-name','prd-desc'].forEach(i=>document.getElementById(i).value='');document.getElementById('prd-price').value=0;document.getElementById('prd-stock').value=100;}
+  openModal('modal-prd');
+}
+
+function saveProduct() {
+  const n=document.getElementById('prd-name').value.trim(), d=document.getElementById('prd-desc').value.trim();
+  const p=parseFloat(document.getElementById('prd-price').value)||0, s=parseInt(document.getElementById('prd-stock').value)||0;
+  const id=document.getElementById('prd-id').value;
+  if (!n) { showAlert('a-prd','⚠️ Product name is required'); return; }
+  setSpinner('btn-save-prd', true);
+  const cb=r=>{setSpinner('btn-save-prd',false,'Save Product');if(r.ok){closeModal('modal-prd');loadProducts();toast('✅ Product saved!');}else{showAlert('a-prd','❌ '+r.err);}};
+  if (id) google.script.run.withSuccessHandler(cb).withFailureHandler(e=>{setSpinner('btn-save-prd',false,'Save Product');showAlert('a-prd','❌ '+e.message);}).updateProductData(id,n,d,p,s,true,SESS.token);
+  else    google.script.run.withSuccessHandler(cb).withFailureHandler(e=>{setSpinner('btn-save-prd',false,'Save Product');showAlert('a-prd','❌ '+e.message);}).addProductData(n,d,p,s,SESS.token);
+}
+
+function deleteProduct(id) {
+  askConfirm('Delete Product','Delete this product permanently?','Delete','btn-red',()=>{
+    google.script.run.withSuccessHandler(r=>{if(r.ok){loadProducts();toast('🗑️ Deleted');}}).withFailureHandler(()=>{}).deleteProductData(id,SESS.token);
+  });
+}
+
+// FIXED: debounce prevents double-click race on toggle
+function toggleProduct(id, el) {
+  if (el.dataset.loading === 'true') return;
+  const p = allProducts.find(x => x.product_id === id); if (!p) return;
+  const now = el.classList.toggle('on');
+  el.dataset.loading = 'true'; el.style.opacity = '0.5';
+  google.script.run
+    .withSuccessHandler(() => { if (p) p.active=now; el.dataset.loading='false'; el.style.opacity=''; })
+    .withFailureHandler(() => { el.classList.toggle('on',!now); el.dataset.loading='false'; el.style.opacity=''; })
+    .updateProductData(id,p.name,p.description,p.price,p.stock,now,SESS.token);
+}
+
+// ── Badge helpers ─────────────────────────────────────────
+function statusBadge(s) {
+  const m={'Pending Payment':'b-amber','Pending Verification':'b-blue','Accepted':'b-blue',
+    'Printing':'b-purple','Ready':'b-green','Delivered':'b-green',
+    'Payment Rejected':'b-red','Payment Expired':'b-gray','Under Review':'b-blue'};
+  return `<span class="badge ${m[s]||'b-gray'}">${s||'—'}</span>`;
+}
+function payBadge(s) {
+  const m={'Unpaid':'b-amber','Under Review':'b-blue','Paid':'b-green','Rejected':'b-red'};
+  return `<span class="badge ${m[s]||'b-gray'}">${s||'—'}</span>`;
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function toast(msg, isErr=false) {
+  const t = document.createElement('div');
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:${isErr?'var(--red)':'#1e293b'};color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:slideUp .3s ease;max-width:300px`;
+  t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── SETTINGS (Configuration Page) ─────────────────────────
+let _cachedSettings = null; // BUG FIX: cache to avoid redundant server calls
+
+function loadSettings(forceRefresh = false) {
+  // Use cache unless forced refresh (after save) or first load
+  if (_cachedSettings && !forceRefresh) {
+    _applySettingsToForm(_cachedSettings);
+    return;
+  }
+  const a = document.getElementById('a-settings');
+  a.textContent = '⏳ Loading settings…';
+  a.className = 'alert';
+  a.style.display = 'block';
+  google.script.run
+    .withSuccessHandler(r => {
+      a.style.display = 'none';
+      if (!r.ok) { showAlert('a-settings', '❌ ' + r.err); return; }
+      _cachedSettings = r.settings; // store in cache
+      const s = r.settings;
+      _applySettingsToForm(r.settings);
+    })
+    .withFailureHandler(e => { showAlert('a-settings', '❌ Failed to load settings: ' + e.message); })
+    .getShopSettings(SESS.token);
+}
+
+function _applySettingsToForm(s) {
+  document.getElementById('cfg-name').value     = s.shopName     || '';
+  document.getElementById('cfg-upi').value      = s.upiId        || '';
+  document.getElementById('cfg-base').value     = s.pricing.base         || 10;
+  document.getElementById('cfg-bw').value       = s.pricing.bwPerPage    || 1.5;
+  document.getElementById('cfg-color').value    = s.pricing.colorPerPage || 5;
+  document.getElementById('cfg-a3').value       = s.pricing.a3Multi      || 1.8;
+  document.getElementById('cfg-custom').value   = s.pricing.customMulti  || 2.0;
+  document.getElementById('cfg-urgent').value   = s.pricing.urgentFee    || 50;
+  document.getElementById('cfg-delivery').value = s.pricing.deliveryFee  || 60;
+  document.getElementById('cfg-qr').value       = s.qrExpiryMin || 15;
+  document.getElementById('cfg-retry').value    = s.retryLimit   || 3;
+  document.getElementById('cfg-approve').value  = s.autoApprove  || 80;
+  document.getElementById('cfg-review').value   = s.needsReview  || 50;
+}
+
+function saveSettings() {
+  const n = document.getElementById('cfg-name').value.trim();
+  const u = document.getElementById('cfg-upi').value.trim();
+  if (!n) { showAlert('a-settings','⚠️ Shop name is required'); return; }
+  if (!u) { showAlert('a-settings','⚠️ UPI ID is required'); return; }
+  const ap = parseInt(document.getElementById('cfg-approve').value)||80;
+  const rv = parseInt(document.getElementById('cfg-review').value)||50;
+  if (rv >= ap) { showAlert('a-settings','⚠️ Needs-Review score must be less than Auto-Approve score'); return; }
+  setSpinner('btn-save-settings', true);
+  const cfg = {
+    shopName: n, upiId: u,
+    pricing: {
+      base        : parseFloat(document.getElementById('cfg-base').value)     || 10,
+      bwPerPage   : parseFloat(document.getElementById('cfg-bw').value)       || 1.5,
+      colorPerPage: parseFloat(document.getElementById('cfg-color').value)    || 5,
+      a3Multi     : parseFloat(document.getElementById('cfg-a3').value)       || 1.8,
+      customMulti : parseFloat(document.getElementById('cfg-custom').value)   || 2.0,
+      urgentFee   : parseFloat(document.getElementById('cfg-urgent').value)   || 50,
+      deliveryFee : parseFloat(document.getElementById('cfg-delivery').value) || 60
+    },
+    qrExpiryMin : parseInt(document.getElementById('cfg-qr').value)      || 15,
+    retryLimit  : parseInt(document.getElementById('cfg-retry').value)   || 3,
+    autoApprove : ap,
+    needsReview : rv
+  };
+  google.script.run
+    .withSuccessHandler(r => {
+      setSpinner('btn-save-settings', false, '💾 Save Settings');
+      if (r.ok) { _cachedSettings = null; toast('✅ Settings saved successfully!'); showAlert('a-settings','✅ Settings saved! Pricing and payment thresholds updated.','ok'); }
+      else      { showAlert('a-settings','❌ ' + r.err); }
+    })
+    .withFailureHandler(e => { setSpinner('btn-save-settings', false, '💾 Save Settings'); showAlert('a-settings','❌ ' + e.message); })
+    .saveShopSettings(cfg, SESS.token);
+}
+
+
+// ── SHOP STATUS ───────────────────────────────────────────────
+let _shopIsOpen = true;
+
+function loadShopStatus() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      _shopIsOpen = r.isOpen;
+      updateShopToggleUI();
+      if (r.closedMsg) document.getElementById('cfg-closed-msg').value = r.closedMsg;
+      // Also load shop info fields
+      if (r.address) document.getElementById('cfg-address').value = r.address;
+      if (r.phone)   document.getElementById('cfg-phone').value   = r.phone;
+      if (r.email)   document.getElementById('cfg-email').value   = r.email;
+      if (r.hours)   document.getElementById('cfg-hours').value   = r.hours;
+      if (r.tagline) document.getElementById('cfg-tagline').value = r.tagline;
+      if (r.logo)    document.getElementById('cfg-logo').value    = r.logo;
+    })
+    .withFailureHandler(() => {})
+    .getShopInfo();
+}
+
+function updateShopToggleUI() {
+  const toggle = document.getElementById('shop-status-toggle');
+  const knob   = document.getElementById('shop-toggle-knob');
+  const label  = document.getElementById('shop-status-label');
+  const sub    = document.getElementById('shop-status-sub');
+  const msgGrp = document.getElementById('closed-msg-group');
+  if (_shopIsOpen) {
+    toggle.className = 'shop-toggle'; knob.className = 'toggle-big on';
+    label.textContent = '🟢 Shop is Open'; sub.textContent = 'Customers can place orders';
+    msgGrp.style.display = 'none';
+  } else {
+    toggle.className = 'shop-toggle closed'; knob.className = 'toggle-big';
+    label.textContent = '🔴 Shop is Closed'; sub.textContent = 'New orders are paused';
+    msgGrp.style.display = 'block';
+  }
+}
+
+function toggleShopOpen() {
+  _shopIsOpen = !_shopIsOpen;
+  updateShopToggleUI();
+  google.script.run
+    .withSuccessHandler(r => { if (!r.ok) { _shopIsOpen = !_shopIsOpen; updateShopToggleUI(); toast('❌ '+r.err, true); } else { toast('✅ Shop status updated'); } })
+    .withFailureHandler(() => { _shopIsOpen = !_shopIsOpen; updateShopToggleUI(); toast('❌ Failed to update', true); })
+    .setShopStatus(_shopIsOpen, document.getElementById('cfg-closed-msg').value, SESS.token);
+}
+
+function saveClosedMsg() {
+  const msg = document.getElementById('cfg-closed-msg').value.trim();
+  google.script.run
+    .withSuccessHandler(r => r.ok ? toast('✅ Message saved') : toast('❌ '+r.err, true))
+    .withFailureHandler(() => toast('❌ Failed', true))
+    .setShopStatus(_shopIsOpen, msg, SESS.token);
+}
+
+function saveShopInfo() {
+  const btn = document.getElementById('btn-save-info');
+  setSpinner('btn-save-info', true);
+  const info = {
+    address : document.getElementById('cfg-address').value,
+    phone   : document.getElementById('cfg-phone').value,
+    email   : document.getElementById('cfg-email').value,
+    hours   : document.getElementById('cfg-hours').value,
+    tagline : document.getElementById('cfg-tagline').value,
+    logo    : document.getElementById('cfg-logo').value
+  };
+  google.script.run
+    .withSuccessHandler(r => { setSpinner('btn-save-info', false, '💾 Save Shop Info'); r.ok ? toast('✅ Shop info saved') : toast('❌ '+r.err, true); })
+    .withFailureHandler(e => { setSpinner('btn-save-info', false, '💾 Save Shop Info'); toast('❌ '+e.message, true); })
+    .saveShopInfo(info, SESS.token);
+}
+
+// ── PAPER CONFIGURATION ────────────────────────────────────────
+let _paperConfig = null;
+
+function loadPaperConfig() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      _paperConfig = r.config;
+      renderPaperRows();
+      document.getElementById('cfg-ink-bw').value    = r.config.inkCost.bw    || 1.0;
+      document.getElementById('cfg-ink-color').value = r.config.inkCost.color || 4.0;
+    })
+    .withFailureHandler(() => {})
+    .getPublicPaperConfig();
+}
+
+function renderPaperRows() {
+  if (!_paperConfig) return;
+  document.getElementById('paper-rows').innerHTML = _paperConfig.paperTypes.map((p, i) => `
+    <div class="paper-type-row" id="paper-row-${i}">
+      <input class="inp-sm" value="${p.name}" data-field="name" data-idx="${i}">
+      <input class="inp-sm" type="number" value="${p.gsm}" data-field="gsm" data-idx="${i}" min="40" max="400">
+      <input class="inp-sm" type="number" value="${p.prices.A4||''}"  data-field="A4"  data-idx="${i}" min="0" step="0.5">
+      <input class="inp-sm" type="number" value="${p.prices.A3||''}"  data-field="A3"  data-idx="${i}" min="0" step="0.5">
+      <input class="inp-sm" type="number" value="${p.prices.A5||''}"  data-field="A5"  data-idx="${i}" min="0" step="0.5">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;justify-content:center">
+        <input type="checkbox" ${p.active?'checked':''} data-field="active" data-idx="${i}">
+      </label>
+      <button class="btn-icon" onclick="removePaperRow(${i})" title="Remove">🗑</button>
+    </div>`).join('');
+}
+
+function addPaperRow() {
+  if (!_paperConfig) return;
+  _paperConfig.paperTypes.push({ id:'pt_'+Date.now(), name:'New Paper Type', gsm:80, prices:{ A4:2.0, A3:4.0 }, active:true });
+  renderPaperRows();
+}
+
+function removePaperRow(idx) {
+  if (!_paperConfig || !confirm('Remove this paper type?')) return;
+  _paperConfig.paperTypes.splice(idx, 1);
+  renderPaperRows();
+}
+
+function savePaperConfig() {
+  if (!_paperConfig) return;
+  // Read current form values
+  document.querySelectorAll('[data-idx]').forEach(inp => {
+    const idx   = parseInt(inp.dataset.idx);
+    const field = inp.dataset.field;
+    const pt    = _paperConfig.paperTypes[idx];
+    if (!pt) return;
+    if (field === 'name')   pt.name    = inp.value;
+    else if (field === 'gsm') pt.gsm   = parseInt(inp.value)||80;
+    else if (field === 'active') pt.active = inp.checked;
+    else if (['A4','A3','A5','Letter'].includes(field)) {
+      pt.prices = pt.prices || {};
+      if (inp.value) pt.prices[field] = parseFloat(inp.value);
+    }
+  });
+  _paperConfig.inkCost = {
+    bw    : parseFloat(document.getElementById('cfg-ink-bw').value)    || 1.0,
+    color : parseFloat(document.getElementById('cfg-ink-color').value) || 4.0
+  };
+  setSpinner('btn-save-paper', true);
+  google.script.run
+    .withSuccessHandler(r => { setSpinner('btn-save-paper', false, '💾 Save Paper Config'); r.ok ? toast('✅ Paper config saved') : toast('❌ '+r.err, true); })
+    .withFailureHandler(e => { setSpinner('btn-save-paper', false, '💾 Save Paper Config'); toast('❌ '+e.message, true); })
+    .savePaperConfig(_paperConfig, SESS.token);
+}
+
+// ── POSTER PRICING ─────────────────────────────────────────────
+let _posterPricing = null;
+
+function loadPosterPricing() {
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      _posterPricing = r.pricing;
+      renderPosterRows();
+      document.getElementById('cfg-poster-note').value  = r.pricing.note || '';
+      document.getElementById('cfg-design-cost').value  = r.pricing.designCost || 250;
+    })
+    .withFailureHandler(() => {})
+    .getPosterPricing();
+}
+
+function renderPosterRows() {
+  if (!_posterPricing) return;
+  document.getElementById('poster-pricing-rows').innerHTML = `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:8px;font-size:11px;font-weight:600;color:var(--gray)">
+      <span>Material Name</span><span>₹/sq.ft</span><span>Min sq.ft</span><span></span>
+    </div>` +
+    _posterPricing.materials.map((m, i) => `
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center">
+        <input class="inp-sm" value="${m.name}" onchange="_posterPricing.materials[${i}].name=this.value">
+        <input class="inp-sm" type="number" value="${m.pricePerSqFt}" min="0" step="0.5" onchange="_posterPricing.materials[${i}].pricePerSqFt=parseFloat(this.value)">
+        <input class="inp-sm" type="number" value="${m.minSqFt}"      min="1" step="0.5" onchange="_posterPricing.materials[${i}].minSqFt=parseFloat(this.value)">
+        <button class="btn-icon" onclick="_posterPricing.materials.splice(${i},1);renderPosterRows()">🗑</button>
+      </div>`).join('') +
+    `<button class="btn btn-ghost btn-sm" onclick="_posterPricing.materials.push({id:'m_'+Date.now(),name:'New Material',pricePerSqFt:10,minSqFt:1});renderPosterRows()">+ Add</button>`;
+}
+
+function savePosterPricing() {
+  if (!_posterPricing) return;
+  _posterPricing.note        = document.getElementById('cfg-poster-note').value;
+  _posterPricing.designCost  = parseFloat(document.getElementById('cfg-design-cost').value)||250;
+  setSpinner('btn-save-poster', true);
+  google.script.run
+    .withSuccessHandler(r => { setSpinner('btn-save-poster', false, '💾 Save Poster Pricing'); r.ok ? toast('✅ Poster pricing saved') : toast('❌ '+r.err, true); })
+    .withFailureHandler(e => { setSpinner('btn-save-poster', false, '💾 Save Poster Pricing'); toast('❌ '+e.message, true); })
+    .savePosterPricing(_posterPricing, SESS.token);
+}
+
+// ── QUOTE REQUESTS ─────────────────────────────────────────────
+let allQuotes   = [];
+let quoteFilter = 'all';
+
+function loadQuoteRequests() {
+  document.getElementById('quotes-list').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">Loading…</div>';
+  google.script.run
+    .withSuccessHandler(r => {
+      allQuotes = r.quotes || [];
+      document.getElementById('nb-quotes').textContent = allQuotes.filter(q => q.status==='Pending').length || '';
+      renderQuotes();
+    })
+    .withFailureHandler(e => { document.getElementById('quotes-list').innerHTML = '<div style="color:var(--red);padding:20px">Error: '+e.message+'</div>'; })
+    .adminGetQuoteRequests(SESS.token);
+}
+
+function filterQuotes(f) {
+  quoteFilter = f;
+  ['all','Pending','Contacted','Quoted','Ordered'].forEach(id => {
+    const btn = document.getElementById('qf-'+id);
+    if (btn) btn.style.background = id===f ? 'var(--blue)' : '';
+    if (btn) btn.style.color      = id===f ? '#fff' : '';
+  });
+  renderQuotes();
+}
+
+function renderQuotes() {
+  const list = quoteFilter === 'all' ? allQuotes : allQuotes.filter(q => q.status === quoteFilter);
+  if (!list.length) { document.getElementById('quotes-list').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray)">No quote requests found.</div>'; return; }
+  const sc = { Pending:'qs-Pending', Contacted:'qs-Contacted', Quoted:'qs-Quoted', Ordered:'qs-Ordered', Cancelled:'qs-Cancelled' };
+  document.getElementById('quotes-list').innerHTML = list.map(q => `
+    <div class="quote-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div>
+          <span style="font-size:13px;font-weight:700">${esc(q.service_type)} — ${esc(q.width_cm||'?')}×${esc(q.height_cm||'?')}cm × ${esc(q.quantity)}</span>
+          <span class="quote-status ${sc[q.status]||''}" style="margin-left:8px">${esc(q.status)}</span>
+        </div>
+        <div style="font-size:12px;color:var(--gray)">${new Date(q.requested_at).toLocaleString('en-IN')}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;margin-bottom:10px">
+        <div><span style="color:var(--gray)">Customer:</span> <strong>${esc(q.user_name)}</strong></div>
+        <div><span style="color:var(--gray)">Phone:</span> <a href="tel:${esc(q.user_phone)}" style="color:var(--blue);font-weight:600">${esc(q.user_phone)}</a></div>
+        <div><span style="color:var(--gray)">Email:</span> <a href="mailto:${esc(q.user_email)}" style="color:var(--blue)">${esc(q.user_email)}</a></div>
+        <div><span style="color:var(--gray)">Material:</span> ${esc(q.material||'—')}</div>
+        <div><span style="color:var(--gray)">Design:</span> ${q.design_type==='professional'?'Needs design':'Own design'}</div>
+      </div>
+      ${q.details ? `<div style="font-size:13px;color:#374151;background:var(--gray-l);padding:10px;border-radius:8px;margin-bottom:10px;line-height:1.5">${esc(q.details)}</div>` : ''}
+      ${q.quoted_price ? `<div style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:8px">Quoted: ₹${esc(q.quoted_price)}</div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
+        <div><label style="font-size:12px;color:var(--gray)">Quoted Price ₹</label>
+          <input class="inp" type="number" id="qp-${esc(q.quote_id)}" placeholder="e.g. 1500" value="${esc(q.quoted_price||'')}" style="margin-top:4px;padding:8px 10px;font-size:13px"></div>
+        <div><label style="font-size:12px;color:var(--gray)">Admin Note</label>
+          <input class="inp" id="qn-${esc(q.quote_id)}" placeholder="Note for customer" value="${esc(q.admin_notes||'')}" style="margin-top:4px;padding:8px 10px;font-size:13px"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <select id="qs-${esc(q.quote_id)}" style="padding:8px;border-radius:8px;border:1px solid var(--border);font-size:13px">
+            ${['Pending','Contacted','Quoted','Ordered','Cancelled'].map(s=>`<option ${s===q.status?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class="btn btn-blue btn-sm" onclick="updateQuote('${esc(q.quote_id)}')">💾 Update</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function updateQuote(quoteId) {
+  const status = document.getElementById('qs-'+quoteId).value;
+  const notes  = document.getElementById('qn-'+quoteId).value;
+  const price  = document.getElementById('qp-'+quoteId).value;
+  google.script.run
+    .withSuccessHandler(r => { if (r.ok) { toast('✅ Quote updated & email sent'); loadQuoteRequests(); } else toast('❌ '+r.err, true); })
+    .withFailureHandler(e => toast('❌ '+e.message, true))
+    .adminUpdateQuote(quoteId, status, notes, price, SESS.token);
+}
+
+// ── Init ───────────────────────────────────────────────────
+// Close modals on backdrop
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => {
+    // Don't close session warning modal on backdrop click — must choose Extend or Logout
+    if (bg.id === 'modal-session-warn') return;
+    if (e.target === bg) bg.classList.remove('on');
+  });
+});
+
+// Init
+startSessionTimer();
+loadDashboard();
+loadShopStatus();
+loadPaperConfig();
+loadPosterPricing();
+</script>
+<style>
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</body>
+</html>

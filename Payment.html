@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Payment — PrintShop Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--blue-2:#dbeafe;
+  --green:#16a34a;--green-l:#f0fdf4;--green-2:#dcfce7;
+  --amber:#f59e0b;--amber-l:#fffbeb;--amber-2:#fef3c7;
+  --red:#dc2626;--red-l:#fef2f2;--red-2:#fee2e2;
+  --gray:#6b7280;--gray-l:#f3f4f6;--border:#e5e7eb;--text:#111827;--white:#fff;
+  --shadow:0 4px 20px rgba(0,0,0,.1);--shadow-lg:0 12px 40px rgba(0,0,0,.15);
+  --radius:16px;--radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:linear-gradient(160deg,#0f172a 0%,#1e3a8a 50%,#1e1b4b 100%);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 14px 40px}
+/* PAGE HEADER */
+.page-header{text-align:center;color:#fff;margin-bottom:22px;width:100%;max-width:520px}
+.brand{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);
+  backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:40px;
+  padding:7px 16px;font-size:14px;font-weight:700;margin-bottom:14px}
+.page-header h1{font-size:24px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px}
+.page-header p{font-size:14px;opacity:.65}
+/* CARD */
+.pay-card{width:100%;max-width:520px;background:var(--white);border-radius:24px;box-shadow:var(--shadow-lg);overflow:hidden}
+/* ORDER BAR */
+.order-bar{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.order-bar .lbl{font-size:11px;opacity:.7;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.order-bar .id{font-size:14px;font-weight:800;font-family:monospace;margin-top:2px}
+.order-bar .amount{font-size:30px;font-weight:900;line-height:1}
+.order-bar .amt-lbl{font-size:11px;opacity:.7;text-align:right;margin-top:1px}
+/* TIMER */
+.timer-bar{background:var(--amber-l);border-bottom:1px solid var(--amber-2);padding:11px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.timer-bar.urgent{background:var(--red-l);border-color:var(--red-2)}
+.timer-bar.expired{background:var(--gray-l);border-color:var(--border)}
+.timer-left{display:flex;align-items:center;gap:10px}
+.t-label{font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.4px}
+.timer-bar.urgent .t-label{color:var(--red)}.timer-bar.expired .t-label{color:var(--gray)}
+.t-count{font-size:22px;font-weight:900;color:#92400e;font-variant-numeric:tabular-nums;line-height:1;margin-top:2px}
+.timer-bar.urgent .t-count{color:var(--red)}.timer-bar.expired .t-count{color:var(--gray)}
+.progress-bar{flex:1;height:5px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;min-width:60px}
+.progress-fill{height:100%;border-radius:3px;background:var(--amber);transition:width .9s linear,background .3s}
+.timer-bar.urgent .progress-fill{background:var(--red)}.timer-bar.expired .progress-fill{width:0!important}
+/* REGEN BAR */
+.regen-bar{background:var(--red-l);border-bottom:1px solid var(--red-2);padding:14px 20px;text-align:center;display:none}
+.regen-bar.on{display:block}
+.regen-bar p{font-size:13.5px;color:var(--red);font-weight:600;margin-bottom:10px}
+/* BODY */
+.pay-body{padding:20px}
+/* STEP TABS */
+.step-tabs{display:flex;background:var(--gray-l);border-radius:10px;padding:4px;gap:4px;margin-bottom:20px}
+.step-tab{flex:1;padding:8px;text-align:center;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;color:var(--gray);transition:all .25s;display:flex;align-items:center;justify-content:center;gap:5px}
+.step-tab.on{background:#fff;color:var(--blue);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.step-tab.done{color:var(--green)}
+.tab-num{width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--gray);font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s}
+.step-tab.on .tab-num{background:var(--blue);color:#fff}
+.step-tab.done .tab-num{background:var(--green);color:#fff}
+/* PANELS */
+.step-panel{display:none}.step-panel.on{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* QR */
+.qr-wrap{text-align:center;background:linear-gradient(160deg,#f0f7ff,#e8f4fd);border:1px solid var(--blue-2);border-radius:var(--radius);padding:22px 16px;margin-bottom:16px}
+.qr-lock{display:inline-flex;align-items:center;gap:6px;background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-2);border-radius:20px;font-size:11px;font-weight:700;padding:4px 12px;margin-bottom:12px}
+#qr-box{display:inline-block;padding:13px;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(37,99,235,.15);margin-bottom:12px;position:relative}
+.qr-expired-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.65);border-radius:12px;align-items:center;justify-content:center;flex-direction:column;color:#fff;font-size:13px;font-weight:700;gap:8px}
+.qr-expired-overlay.on{display:flex}
+.upi-apps{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.upi-badge{display:flex;align-items:center;gap:5px;padding:4px 11px;background:#fff;border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;color:var(--gray)}
+/* MANUAL UPI */
+.manual-upi{background:var(--gray-l);border-radius:10px;padding:13px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mu-label{font-size:11.5px;color:var(--gray);font-weight:600;margin-bottom:2px}
+.mu-value{font-size:14px;font-weight:800;font-family:monospace;color:var(--blue)}
+.copy-btn{padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.copy-btn:hover{background:var(--blue-d)}.copy-btn.copied{background:var(--green)}
+/* HOW STEPS */
+.how-steps{counter-reset:step;margin-bottom:16px}
+.how-step{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.how-step:last-child{border:none}
+.how-step::before{counter-increment:step;content:counter(step);min-width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.how-sub{font-size:11.5px;color:var(--gray);margin-top:2px}
+/* AMT CONFIRM */
+.amt-confirm{display:flex;align-items:center;gap:12px;background:var(--blue-l);border:1px solid var(--blue-2);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px}
+.a-val{font-size:22px;font-weight:900;color:var(--blue);margin-top:2px}
+.a-lbl{font-size:12px;color:var(--blue);font-weight:600}
+.a-note{font-size:11px;color:var(--gray);margin-top:2px}
+/* FORMS */
+.fg{margin-bottom:15px}
+.fg label{display:block;font-size:11.5px;font-weight:800;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.req{color:var(--red)}.opt-tag{font-size:10px;background:var(--gray-l);color:var(--gray);border-radius:4px;padding:1px 6px;font-weight:600;text-transform:none;letter-spacing:0;margin-left:4px}
+.inp{width:100%;padding:11px 13px;border:2px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:all .2s;background:#fafafa;font-family:inherit}
+.inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.inp.valid{border-color:var(--green);background:#f0fdf4}.inp.invalid{border-color:var(--red);background:#fef2f2}
+.inp-hint{font-size:12px;color:var(--gray);margin-top:4px}
+.inp-hint.ok{color:var(--green)}.inp-hint.err{color:var(--red)}
+/* SCORE PREVIEW */
+.score-preview{background:var(--gray-l);border-radius:10px;padding:13px;margin-bottom:15px}
+.sp-title{font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
+.score-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+.sr-pts{font-weight:800;font-size:13px}.sr-pts.on{color:var(--green)}.sr-pts.off{color:var(--gray)}
+.score-total{border-top:1px solid var(--border);margin-top:7px;padding-top:9px;display:flex;align-items:center;justify-content:space-between}
+.st-val{font-size:22px;font-weight:900}.st-val.high{color:var(--green)}.st-val.mid{color:var(--amber)}.st-val.low{color:var(--red)}
+.score-bar-wrap{margin-top:7px;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .4s ease,background .3s}
+/* CHECKBOX */
+.check-row{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--amber-l);border:1px solid var(--amber-2);border-radius:10px;margin-bottom:15px}
+.check-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue);flex-shrink:0;margin-top:1px;cursor:pointer}
+.check-row label{font-size:13px;color:var(--text);cursor:pointer;line-height:1.5}
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa;position:relative}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-l)}
+.upload-zone.has-file{border-color:var(--green);background:var(--green-l);border-style:solid}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+/* RESULT */
+.result-header{padding:28px;color:#fff;text-align:center}
+.result-header.approved{background:linear-gradient(135deg,#15803d,#16a34a)}
+.result-header.review{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.result-header.rejected{background:linear-gradient(135deg,#b91c1c,#dc2626)}
+.result-header .r-icon{font-size:48px;display:block;margin-bottom:8px}
+.result-header h2{font-size:20px;font-weight:900;margin-bottom:6px}
+.result-header p{font-size:13px;opacity:.9;max-width:300px;margin:0 auto}
+.result-body{padding:18px;background:#fafafa}
+.result-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.result-row:last-child{border:none}
+.score-badges{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:14px 0}
+.sc-badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.sc-badge.pass{background:var(--green-l);color:var(--green);border:1px solid var(--green-2)}
+.sc-badge.fail{background:var(--red-l);color:var(--red);border:1px solid var(--red-2)}
+/* BUTTONS */
+.btn{padding:12px 18px;border:none;border-radius:9px;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:7px;letter-spacing:.2px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--blue);color:#fff;width:100%}
+.btn-primary:hover:not(:disabled){background:var(--blue-d);transform:translateY(-1px)}
+.btn-secondary{background:#fff;color:var(--gray);width:100%;border:2px solid var(--border)}
+.btn-secondary:hover:not(:disabled){background:var(--gray-l)}
+.btn-green{background:var(--green);color:#fff;width:100%}
+.btn-green:hover:not(:disabled){background:#15803d;transform:translateY(-1px)}
+.btn-row{display:flex;gap:9px;flex-direction:column}
+.spinner{display:inline-block;width:17px;height:17px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ALERTS */
+.alert{padding:10px 13px;border-radius:9px;font-size:13.5px;margin-bottom:13px;display:flex;align-items:flex-start;gap:7px}
+.alert.err{background:var(--red-l);color:var(--red);border:1px solid var(--red-2)}
+.alert.ok{background:var(--green-l);color:var(--green);border:1px solid var(--green-2)}
+.alert.info{background:var(--blue-l);color:var(--blue);border:1px solid var(--blue-2)}
+.alert.warn{background:var(--amber-l);color:#92400e;border:1px solid var(--amber-2)}
+/* FRAUD WARNING */
+.fraud-warn{background:#fef2f2;border:2px solid #fca5a5;border-radius:10px;padding:13px;margin-bottom:14px;display:none}
+.fraud-warn.on{display:block}
+.fw-title{font-weight:800;color:var(--red);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.fw-text{font-size:13px;color:#991b1b}
+@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.shake{animation:shake .4s ease}
+@media(max-width:480px){
+  .pay-body{padding:12px}
+  .order-bar .amount{font-size:22px}
+  .order-bar{flex-direction:column;gap:8px;text-align:center}
+  .step-tabs{gap:4px}
+  .step-tab{padding:7px 4px;font-size:11px;gap:2px}
+  .tab-num{width:20px;height:20px;font-size:11px}
+  .score-table{font-size:12px}
+  .score-bar-wrap{display:none}
+  .inp,.sel{font-size:15px}
+}
+@media(max-width:360px){
+  .step-tab-label{display:none}
+  .step-tab{justify-content:center}
+}
+/* FIXED: Mobile QR and step tab improvements */
+@media(max-width:380px){
+  #qr-box{padding:8px}
+  #qr-render canvas, #qr-render img{width:160px!important;height:160px!important}
+  .upi-apps{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .step-tab{padding:6px 4px;font-size:11px;gap:3px}
+  .tab-num{width:18px;height:18px;font-size:10px}
+}
+</style>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="brand">🖨️ PrintShop Pro</div>
+  <h1>Secure Payment</h1>
+  <p>Order-locked QR · Rule-based verification</p>
+</div>
+
+<div class="pay-card">
+  <!-- Order bar -->
+  <div class="order-bar">
+    <div><div class="lbl">Order ID</div><div class="id" id="bar-order-id">Loading…</div></div>
+    <div><div class="amount" id="bar-amount">₹—</div><div class="amt-lbl">Amount to Pay</div></div>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-bar" id="timer-bar">
+    <div class="timer-left">
+      <span id="timer-icon" style="font-size:20px">⏱️</span>
+      <div><div class="t-label" id="timer-label">QR Valid For</div><div class="t-count" id="timer-count">15:00</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="timer-fill" style="width:100%"></div></div>
+  </div>
+
+  <!-- Regen bar (shown when expired) -->
+  <div class="regen-bar" id="regen-bar">
+    <p>⌛ QR code expired. Generate a new one to continue.</p>
+    <button class="btn btn-primary" style="width:auto;padding:10px 20px" id="btn-regen" onclick="regenQR()">🔄 Regenerate QR</button>
+  </div>
+
+  <!-- Body -->
+  <div class="pay-body">
+    <div class="fraud-warn" id="fraud-warn">
+      <div class="fw-title">🚨 Suspicious Activity Detected</div>
+      <div class="fw-text" id="fraud-msg">This transaction has been flagged. Contact support if this is a mistake.</div>
+    </div>
+    <div class="alert" id="main-alert" style="display:none"></div>
+
+    <!-- Step tabs -->
+    <div class="step-tabs">
+      <div class="step-tab on" id="tab-1" onclick="switchTab(1)"><div class="tab-num">1</div> Scan &amp; Pay</div>
+      <div class="step-tab"    id="tab-2" onclick="switchTab(2)"><div class="tab-num">2</div> Submit Proof</div>
+      <div class="step-tab"    id="tab-3" onclick="switchTab(3)"><div class="tab-num">3</div> Result</div>
+    </div>
+
+    <!-- ── TAB 1: SCAN ── -->
+    <div class="step-panel on" id="panel-1">
+      <div class="amt-confirm">
+        <span style="font-size:30px">💸</span>
+        <div>
+          <div class="a-lbl">Exact Amount to Pay</div>
+          <!-- FIX #15: renamed id from amt-display to avoid later collision -->
+          <div class="a-val" id="qr-amt-display">₹0.00</div>
+          <div class="a-note">Do not change this amount when paying</div>
+        </div>
+      </div>
+      <div class="qr-wrap">
+        <div class="qr-lock">🔒 Order-Locked · Single Use</div>
+        <div id="qr-box">
+          <div id="qr-render"></div>
+          <div class="qr-expired-overlay" id="qr-expired-overlay">
+            <span style="font-size:32px">⌛</span><span>QR Expired</span>
+          </div>
+        </div>
+        <div style="font-size:12.5px;color:var(--gray);margin-bottom:4px">Scan using any UPI app</div>
+        <!-- FIX #15: id renamed to qr-upi-label -->
+        <div style="font-size:14px;font-weight:800;font-family:monospace;color:var(--blue)" id="qr-upi-label">—</div>
+        <div class="upi-apps">
+          <div class="upi-badge">🟢 GPay</div><div class="upi-badge">🔵 PhonePe</div>
+          <div class="upi-badge">🔴 Paytm</div><div class="upi-badge">🟠 BHIM</div>
+        </div>
+      </div>
+      <div class="manual-upi">
+        <div><div class="mu-label">Or pay to UPI ID manually</div><div class="mu-value" id="mu-upi">—</div></div>
+        <button class="copy-btn" id="copy-btn" onclick="copyUPI()">📋 Copy</button>
+      </div>
+      <div class="how-steps">
+        <div class="how-step">Open your UPI app<div class="how-sub">Google Pay, PhonePe, Paytm, BHIM or any bank app</div></div>
+        <div class="how-step">Scan QR or enter UPI ID<div class="how-sub">Amount <b id="hint-amt">₹0</b> is pre-filled — do not change it</div></div>
+        <div class="how-step">Add the Note / Remark: <b id="hint-note">—</b><div class="how-sub">Look for "Note", "Remarks" or "Description" field</div></div>
+        <div class="how-step">Complete payment &amp; note the Transaction ID<div class="how-sub">It's a 12+ digit number on the success screen</div></div>
+      </div>
+      <button class="btn btn-primary" id="btn-paid" onclick="switchTab(2)">✅ I've Paid — Enter Details →</button>
+    </div>
+
+    <!-- ── TAB 2: SUBMIT ── -->
+    <div class="step-panel" id="panel-2">
+      <!-- Live score -->
+      <div class="score-preview">
+        <div class="sp-title">📊 Live Verification Score</div>
+        <div class="score-row"><span>💰 Amount match</span><span class="sr-pts off" id="sc-amt">+0</span></div>
+        <div class="score-row"><span>🔢 Valid UPI Ref (≥12 chars)</span><span class="sr-pts off" id="sc-ref">+0</span></div>
+        <div class="score-row"><span>📝 Order note confirmed</span><span class="sr-pts off" id="sc-note">+0</span></div>
+        <div class="score-row"><span>📸 Screenshot uploaded</span><span class="sr-pts off" id="sc-ss">+0</span></div>
+        <div class="score-total">
+          <span style="font-weight:700;font-size:13px">Total Score</span>
+          <span class="st-val low" id="sc-total">0 / 100</span>
+        </div>
+        <div class="score-bar-wrap"><div class="score-bar-fill" id="sc-bar" style="width:0%;background:var(--red)"></div></div>
+        <div style="font-size:11.5px;color:var(--gray);margin-top:6px" id="sc-verdict">Fill in details below to see your score</div>
+      </div>
+
+      <!-- UPI Ref -->
+      <div class="fg">
+        <label>UPI Transaction ID <span class="req">*</span></label>
+        <input class="inp" type="text" id="inp-ref" placeholder="e.g. 418526917438"
+          style="font-family:monospace;letter-spacing:1.5px;font-size:15px"
+          oninput="onRefChange()" maxlength="40">
+        <div class="inp-hint" id="ref-hint">📋 Shown on payment success screen in your UPI app</div>
+      </div>
+
+      <!-- Amount paid -->
+      <div class="fg">
+        <label>Amount You Paid <span class="req">*</span></label>
+        <!-- FIX #15: renamed id to inp-amount-paid to avoid collision with step-1 hint ids -->
+        <input class="inp" type="number" id="inp-amount-paid" placeholder="Enter the exact amount paid"
+          oninput="onAmtChange()" step="0.01" min="0">
+        <div class="inp-hint" id="amt-paid-hint">Enter ₹<span id="expected-amt">0</span> — the exact order total</div>
+      </div>
+
+      <!-- Note confirmation -->
+      <div class="check-row">
+        <input type="checkbox" id="chk-note" onchange="onNoteChange()">
+        <label for="chk-note">I entered Order ID <b id="note-order-id">—</b> in the Note/Remarks field of my UPI app</label>
+      </div>
+
+      <!-- Screenshot -->
+      <div class="fg">
+        <label>Payment Screenshot <span class="opt-tag">Optional · +10 pts</span></label>
+        <div class="upload-zone" id="ss-zone">
+          <input type="file" id="ss-input" accept="image/jpeg,image/jpg,image/png,image/webp" onchange="handleScreenshot(this.files[0])">
+          <div style="font-size:26px;margin-bottom:6px">📸</div>
+          <div style="font-size:13px;color:var(--gray)"><b>Click to upload</b> payment screenshot</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:2px">JPG, PNG — Max 5 MB</div>
+        </div>
+        <div id="ss-ok" style="font-size:13px;color:var(--green);margin-top:6px;display:none">✅ <span id="ss-fname"></span></div>
+      </div>
+
+      <div class="alert err" id="a-submit" style="display:none"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-submit" onclick="submitPayment()">🔒 Submit for Verification</button>
+        <button class="btn btn-secondary" onclick="switchTab(1)">← Back to QR</button>
+      </div>
+    </div>
+
+    <!-- ── TAB 3: RESULT ── -->
+    <div class="step-panel" id="panel-3">
+      <div id="result-card"></div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;margin-top:18px;color:rgba(255,255,255,.35);font-size:12px">
+  🔒 Secure · Rule-based · No payment gateway
+</div>
+
+<script>
+// ── Session guard ──────────────────────────────────────────
+const SESS = JSON.parse(localStorage.getItem('ps_session') || 'null');
+if (!SESS || SESS.role !== 'user') { window.location.href = '/'; }
+
+// Get order ID from URL param or localStorage fallback
+const urlParams = new URLSearchParams(window.location.search);
+const ORDER_ID  = urlParams.get('orderId') || localStorage.getItem('ps_pay_order') || '';
+if (!ORDER_ID) { alert('No order ID found. Redirecting…'); window.location.href = '/user'; }
+
+// ── State ──────────────────────────────────────────────────
+let SESSION_DATA    = null;
+let timerInterval   = null;
+let pollInterval    = null;   // FIXED: polling for Needs Review status
+let totalSecs       = 0;
+let maxSecs         = 900;
+let isExpired       = false;
+let ssFile          = { b64:'', name:'', mime:'' };
+let paymentSubmitted = false;  // FIXED: gate tab-3 access
+let EXPECTED_AMT    = 0;       // FIXED: store expected amount in JS, not DOM
+
+// ── Init ───────────────────────────────────────────────────
+document.getElementById('bar-order-id').textContent  = ORDER_ID;
+document.getElementById('hint-note').textContent      = ORDER_ID;
+document.getElementById('note-order-id').textContent  = ORDER_ID;
+loadSession();
+
+function loadSession() {
+  showMainAlert('info', 'ℹ️ Generating secure QR code…');
+  google.script.run
+    .withSuccessHandler(r => {
+      hideMainAlert();
+      if (!r.ok) {
+        if (r.locked) {
+          showMainAlert('err', '🔒 ' + r.err);
+          document.getElementById('btn-paid').disabled = true;
+        } else {
+          showMainAlert('err', '❌ ' + r.err);
+        }
+        return;
+      }
+      SESSION_DATA = r;
+      applySession(r);
+    })
+    .withFailureHandler(e => showMainAlert('err', '❌ ' + e.message))
+    .initPaymentSession(ORDER_ID, SESS.userId, SESS.token);
+}
+
+function applySession(d) {
+  EXPECTED_AMT = parseFloat(d.amount) || 0;  // FIXED: store in JS variable
+  const amt = '₹' + EXPECTED_AMT.toFixed(2);
+  document.getElementById('bar-amount').textContent    = amt;
+  document.getElementById('qr-amt-display').textContent= amt;
+  document.getElementById('hint-amt').textContent      = amt;
+  // FIXED: update span textContent only — never rebuild innerHTML
+  document.getElementById('expected-amt').textContent  = EXPECTED_AMT.toFixed(2);
+  document.getElementById('qr-upi-label').textContent  = d.upiId;
+  document.getElementById('mu-upi').textContent        = d.upiId;
+  // Pre-fill amount field
+  document.getElementById('inp-amount-paid').value = EXPECTED_AMT.toFixed(2);
+  onAmtChange();
+  buildQR(d.upiLink);
+  // BUG FIX: store expiresAt and use wall-clock on every tick — drift-proof
+  const secsLeft = Math.max(0, Math.floor((new Date(d.expiresAt) - new Date()) / 1000));
+  maxSecs   = d.expiryMins * 60;
+  totalSecs = secsLeft;
+  isExpired = secsLeft <= 0;
+  if (isExpired) { onExpired(); } else { startTimer(d.expiresAt); }
+}
+
+// ── QR ────────────────────────────────────────────────────
+function buildQR(upiLink) {
+  const box = document.getElementById('qr-render');
+  box.innerHTML = '';
+  try {
+    new QRCode(box, { text:upiLink, width:200, height:200, colorDark:'#1e3a8a', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.H });
+  } catch(e) {
+    const fallback = document.createElement('div');
+    fallback.style.cssText = 'padding:14px;font-size:11px;word-break:break-all;color:#374151;background:#f0f4ff;border-radius:8px;max-width:200px;text-align:left';
+    fallback.textContent = upiLink;
+    box.appendChild(fallback);
+  }
+}
+
+// ── Timer (wall-clock based — drift-proof across device sleep/tab hide) ──
+function startTimer(expiresAtISO) {
+  clearInterval(timerInterval);
+  const deadline = new Date(expiresAtISO || SESSION_DATA?.expiresAt || Date.now());
+  const tick = () => {
+    const secs = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+    totalSecs = secs;
+    renderTimer(secs);
+    if (secs <= 0) { clearInterval(timerInterval); onExpired(); }
+  };
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+function renderTimer(secs) {
+  const m = Math.floor(secs / 60), s = secs % 60;
+  document.getElementById('timer-count').textContent = m + ':' + String(s).padStart(2,'0');
+  document.getElementById('timer-fill').style.width  = Math.max(0,(secs/maxSecs)*100) + '%';
+  const bar = document.getElementById('timer-bar');
+  bar.classList.remove('urgent','expired');
+  if (secs > 0 && secs <= 120) {
+    bar.classList.add('urgent');
+    document.getElementById('timer-icon').textContent  = '🔴';
+    document.getElementById('timer-label').textContent = 'Expiring Soon!';
+  } else if (secs > 0) {
+    document.getElementById('timer-icon').textContent  = '⏱️';
+    document.getElementById('timer-label').textContent = 'QR Valid For';
+  }
+}
+
+function onExpired() {
+  isExpired = true;
+  clearInterval(timerInterval);
+  const bar = document.getElementById('timer-bar');
+  bar.classList.add('expired'); bar.classList.remove('urgent');
+  document.getElementById('timer-count').textContent = '00:00';
+  document.getElementById('timer-icon').textContent  = '⌛';
+  document.getElementById('timer-label').textContent = 'QR Expired';
+  document.getElementById('qr-expired-overlay').classList.add('on');
+  document.getElementById('regen-bar').classList.add('on');
+  document.getElementById('btn-paid').disabled = true;
+  showMainAlert('warn', '⌛ QR expired. Click "Regenerate QR" to get a new one.');
+}
+
+function regenQR() {
+  const btn = document.getElementById('btn-regen');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  google.script.run
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.innerHTML = '🔄 Regenerate QR';
+      if (r.ok) {
+        SESSION_DATA = r; isExpired = false;
+        document.getElementById('regen-bar').classList.remove('on');
+        document.getElementById('qr-expired-overlay').classList.remove('on');
+        document.getElementById('btn-paid').disabled = false;
+        document.getElementById('hint-note').textContent     = r.orderId;
+        document.getElementById('note-order-id').textContent = r.orderId;
+        hideMainAlert();
+        applySession(r);
+        switchTab(1);
+      } else { showMainAlert('err','❌ ' + r.err); }
+    })
+    .withFailureHandler(e => { btn.disabled=false; btn.innerHTML='🔄 Regenerate QR'; showMainAlert('err','❌ '+e.message); })
+    .regeneratePaymentQR(ORDER_ID, SESS.userId, SESS.token);
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+function switchTab(n) {
+  if (n === 2 && isExpired) { showMainAlert('warn','⚠️ QR expired. Please regenerate first.'); return; }
+  // FIXED: Tab 3 (Result) only accessible after payment is submitted
+  if (n === 3 && !paymentSubmitted) return;
+  [1,2,3].forEach(i => {
+    document.getElementById('panel-' + i).classList.toggle('on', i === n);
+    const t = document.getElementById('tab-' + i);
+    t.classList.remove('on','done');
+    if (i < n) t.classList.add('done');
+    if (i === n) t.classList.add('on');
+  });
+}
+
+// ── Score (client preview) ────────────────────────────────
+function recalcScore() {
+  // Don't run before session loads — EXPECTED_AMT is 0 and scores would be wrong
+  if (!SESSION_DATA) return;
+  const ref    = document.getElementById('inp-ref').value.trim();
+  const amt    = parseFloat(document.getElementById('inp-amount-paid').value) || 0;
+  const note   = document.getElementById('chk-note').checked;
+  const hasSS  = !!ssFile.b64;
+  // FIXED: use EXPECTED_AMT JS variable instead of SESSION_DATA.amount
+  const amtOK  = EXPECTED_AMT > 0 && Math.abs(amt - EXPECTED_AMT) < 0.01;
+  const refOK  = ref.length >= 12;
+  let score = 0;
+  if (amtOK) score += 40;
+  if (refOK) score += 30;
+  if (note)  score += 20;
+  if (hasSS) score += 10;
+  setScorePts('sc-amt',  amtOK, 40);
+  setScorePts('sc-ref',  refOK, 30);
+  setScorePts('sc-note', note,  20);
+  setScorePts('sc-ss',   hasSS, 10);
+  const tv  = document.getElementById('sc-total');
+  tv.textContent = score + ' / 100';
+  tv.className   = 'st-val ' + (score >= 80 ? 'high' : score >= 50 ? 'mid' : 'low');
+  const bar = document.getElementById('sc-bar');
+  bar.style.width      = score + '%';
+  bar.style.background = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--amber)' : 'var(--red)';
+  const vd = document.getElementById('sc-verdict');
+  if (score >= 80) { vd.textContent='🎉 Score ≥80 — Will be Auto Approved instantly!'; vd.style.color='var(--green)'; }
+  else if (score >= 50) { vd.textContent='⏳ Score 50–79 — Will be manually reviewed (within 30 min)'; vd.style.color='var(--amber)'; }
+  else { vd.textContent='❌ Score <50 — May be rejected. Fix the issues above.'; vd.style.color='var(--red)'; }
+}
+
+function setScorePts(id, pass, pts) {
+  const el = document.getElementById(id);
+  el.textContent = pass ? '+' + pts : '+0';
+  el.className   = 'sr-pts ' + (pass ? 'on' : 'off');
+}
+
+function onRefChange() {
+  const ref = document.getElementById('inp-ref').value.trim();
+  const inp = document.getElementById('inp-ref');
+  const hint = document.getElementById('ref-hint');
+  if (!ref) { inp.className='inp'; hint.textContent='📋 Shown on payment success screen'; hint.className='inp-hint'; }
+  else if (ref.length < 12) { inp.className='inp invalid'; hint.textContent=`⚠️ Too short — need 12+ chars (you have ${ref.length})`; hint.className='inp-hint err'; }
+  else { inp.className='inp valid'; hint.textContent=`✅ Valid (${ref.length} characters)`; hint.className='inp-hint ok'; }
+  recalcScore();
+}
+
+function onAmtChange() {
+  // FIXED: don't run scoring before session is loaded (EXPECTED_AMT = 0 at init)
+  if (!SESSION_DATA) return;
+  const amt  = parseFloat(document.getElementById('inp-amount-paid').value) || 0;
+  const inp  = document.getElementById('inp-amount-paid');
+  const hint = document.getElementById('amt-paid-hint');
+  if (!amt) {
+    inp.className  = 'inp';
+    hint.className = 'inp-hint';
+    hint.innerHTML = `Enter ₹<span id="expected-amt">${EXPECTED_AMT.toFixed(2)}</span> — the exact order total`;
+  } else if (EXPECTED_AMT > 0 && Math.abs(amt - EXPECTED_AMT) < 0.01) {
+    inp.className  = 'inp valid';
+    hint.textContent = '✅ Amount matches order total';
+    hint.className = 'inp-hint ok';
+  } else {
+    inp.className  = 'inp invalid';
+    hint.textContent = `❌ Mismatch! Expected ₹${EXPECTED_AMT.toFixed(2)}, entered ₹${amt.toFixed(2)}`;
+    hint.className = 'inp-hint err';
+  }
+  recalcScore();
+}
+
+function onNoteChange() { recalcScore(); }
+
+function handleScreenshot(file) {
+  if (!file) return;
+  if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) { showAlert('a-submit','⚠️ Only JPG, PNG, or WebP images allowed for screenshots','err'); return; }
+  if (file.size > 5 * 1048576) { showAlert('a-submit','⚠️ Screenshot too large (max 5 MB)','err'); return; }
+  const r = new FileReader();
+  r.onload = ev => {
+    ssFile.b64 = ev.target.result.split(',')[1];
+    ssFile.name = file.name; ssFile.mime = file.type;
+    document.getElementById('ss-zone').classList.add('has-file');
+    document.getElementById('ss-ok').style.display = 'block';
+    document.getElementById('ss-fname').textContent = file.name;
+    recalcScore();
+  };
+  r.readAsDataURL(file);
+}
+
+// ── Submit ────────────────────────────────────────────────
+function submitPayment() {
+  const ref = document.getElementById('inp-ref').value.trim();
+  const amt = document.getElementById('inp-amount-paid').value.trim();
+  const note= document.getElementById('chk-note').checked;
+  if (!ref)         { shake('inp-ref');         showAlert('a-submit','⚠️ Please enter your UPI Transaction ID','err'); return; }
+  if (ref.length<6) { shake('inp-ref');         showAlert('a-submit','⚠️ UPI Transaction ID seems too short','err'); return; }
+  if (!amt)         { shake('inp-amount-paid'); showAlert('a-submit','⚠️ Please enter the amount you paid','err'); return; }
+  if (isExpired)    { showAlert('a-submit','⚠️ Session expired. Go back and regenerate QR.','warn'); return; }
+  if (!SESSION_DATA){ showAlert('a-submit','⚠️ Session not loaded. Please refresh.','err'); return; }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Verifying…';
+  hideAlert('a-submit');
+
+  google.script.run
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.innerHTML = '🔒 Submit for Verification';
+      if (r.ok) {
+        clearInterval(timerInterval);
+        paymentSubmitted = true;  // FIXED: allow tab 3 to be accessed
+        renderResult(r);
+        switchTab(3);
+        // FIXED: clear stored order ID after successful submission
+        if (r.autoStatus === 'Auto Approved') {
+          localStorage.removeItem('ps_pay_order');
+        }
+        // FIXED: start polling if payment needs manual review
+        if (r.autoStatus === 'Needs Review') {
+          startStatusPolling();
+        }
+      } else {
+        if (r.fraud) { document.getElementById('fraud-warn').classList.add('on'); document.getElementById('fraud-msg').textContent = r.err; }
+        if (r.expired) { onExpired(); return; }
+        showAlert('a-submit', '❌ ' + r.err, 'err');
+        document.getElementById('inp-ref').classList.add('invalid');
+      }
+    })
+    .withFailureHandler(e => { btn.disabled=false; btn.innerHTML='🔒 Submit for Verification'; showAlert('a-submit','❌ '+e.message,'err'); })
+    .submitSmartPayment({
+      sessionId      : SESSION_DATA.sessionId,
+      orderId        : ORDER_ID,
+      upiRef         : ref,
+      enteredAmount  : parseFloat(amt),
+      noteConfirmed  : note,
+      screenshotB64  : ssFile.b64   || '',
+      screenshotName : ssFile.name  || '',
+      screenshotMime : ssFile.mime  || ''
+    }, SESS.userId, SESS.token);
+}
+
+// ── Result ────────────────────────────────────────────────
+// FIXED: Start polling every 30s when payment is "Needs Review"
+function startStatusPolling() {
+  clearInterval(pollInterval);
+  pollInterval = setInterval(() => {
+    google.script.run
+      .withSuccessHandler(r => {
+        if (!r.ok || !r.payment) return;
+        const adminStatus = String(r.payment.admin_status || '');
+        if (adminStatus === 'Approved') {
+          clearInterval(pollInterval);
+          localStorage.removeItem('ps_pay_order');
+          // Update the result card to show approval
+          const rc = document.getElementById('result-card');
+          if (rc) {
+            const hdr = rc.querySelector('.result-header');
+            if (hdr) {
+              hdr.className = 'result-header approved';
+              hdr.innerHTML = `<span class="r-icon">🎉</span><h2>Payment Approved!</h2><p>Your payment was manually approved by our team. Your order is confirmed!</p>`;
+            }
+          }
+          // Show toast notification
+          const t = document.createElement('div');
+          t.style.cssText = 'position:fixed;top:20px;right:20px;background:#16a34a;color:#fff;padding:14px 20px;border-radius:12px;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.25)';
+          t.textContent = '🎉 Payment Approved! Your order is confirmed.';
+          document.body.appendChild(t);
+          setTimeout(() => t.remove(), 6000);
+        } else if (adminStatus === 'Rejected') {
+          clearInterval(pollInterval);
+          const hdr = document.querySelector('.result-header.review');
+          if (hdr) {
+            hdr.className = 'result-header rejected';
+            hdr.innerHTML = `<span class="r-icon">❌</span><h2>Payment Rejected</h2><p>Your payment was rejected by our team. Please contact support or retry with correct details.</p>`;
+          }
+        }
+      })
+      .withFailureHandler(() => {})
+      .getPaymentStatus(ORDER_ID, SESS.userId, SESS.token);
+  }, 30000); // Poll every 30 seconds
+}
+
+function renderResult(r) {
+  const isAuto   = r.autoStatus === 'Auto Approved';
+  const isReview = r.autoStatus === 'Needs Review';
+  const cls      = isAuto ? 'approved' : isReview ? 'review' : 'rejected';
+  const icon     = isAuto ? '🎉' : isReview ? '⏳' : '❌';
+  const heading  = isAuto ? 'Payment Auto-Approved!' : isReview ? 'Under Review' : 'Not Verified';
+  const subtext  = isAuto
+    ? 'Your payment was instantly verified. Your order is confirmed and will be processed shortly!'
+    : isReview
+    ? 'Our team will manually verify your payment within 30 minutes. You will be notified via email.'
+    : 'Verification failed. Please retry with correct details or contact support.';
+  const breakBadges = (r.breakdown||'').split(' | ').filter(Boolean).map(b => {
+    const pts  = parseInt((b.match(/[+-]\d+/)||['0'])[0])||0;
+    return `<span class="sc-badge ${pts>0?'pass':'fail'}">${pts>0?'✓':'✗'} ${b}</span>`;
+  }).join('');
+  const nextBtn = isAuto
+    ? `<button class="btn btn-green" onclick="localStorage.removeItem('ps_pay_order');window.location.href='/user'">📦 View My Orders</button>`
+    : isReview
+    ? `<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#92400e">
+        <b>🔄 Auto-checking status every 30 seconds…</b><br>You'll see an update here when our team reviews your payment.
+       </div>
+       <button class="btn btn-primary" onclick="window.location.href='/user'">📦 Track Order</button>`
+    : `<button class="btn btn-secondary" onclick="retryPayment()">🔄 Retry Payment</button>`;
+
+  document.getElementById('result-card').innerHTML = `
+    <div class="result-header ${cls}">
+      <span class="r-icon">${icon}</span><h2>${heading}</h2><p>${subtext}</p>
+    </div>
+    <div class="result-body">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px">
+        ${[['Order ID',ORDER_ID],['Payment ID',r.paymentId||'—'],['Score',r.score+'/100'],['Decision',r.autoStatus],['Order Status',r.orderStatus||'—']]
+          .map(([k,v])=>`<div class="result-row"><span style="color:var(--gray)">${k}</span><span style="font-weight:700">${v}</span></div>`).join('')}
+      </div>
+      <div style="font-size:11.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Score Breakdown</div>
+      <div class="score-badges">${breakBadges}</div>
+      <div class="btn-row" style="margin-top:14px">${nextBtn}</div>
+    </div>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function showMainAlert(type, msg) {
+  const el = document.getElementById('main-alert');
+  el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'flex';
+}
+
+function retryPayment() {
+  paymentSubmitted = false;
+  hideAlert('a-submit');
+  switchTab(1);
+  regenQR();
+}
+function hideMainAlert() {
+  document.getElementById('main-alert').style.display = 'none';
+}
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return; el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'flex';
+  setTimeout(() => { el.style.display='none'; }, 7000);
+}
+function hideAlert(id) { const el = document.getElementById(id); if(el) el.style.display='none'; }
+function shake(id) {
+  const el = document.getElementById(id); if(!el) return;
+  el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 500);
+}
+function copyUPI() {
+  const upi = SESSION_DATA ? SESSION_DATA.upiId : '';
+  if (!upi) return;
+  navigator.clipboard.writeText(upi).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent='📋 Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {});
+}
+// (recalcScore initialises when user types — no need to call at load time)
+</script>
+</body>
+</html>

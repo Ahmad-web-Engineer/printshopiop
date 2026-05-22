@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Payment Verification | PrintShop Pro</title>
+<style>
+:root{--blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#eff6ff;--blue-2:#dbeafe;--green:#16a34a;--green-l:#f0fdf4;--green-2:#dcfce7;--amber:#f59e0b;--amber-l:#fffbeb;--amber-2:#fef3c7;--red:#dc2626;--red-l:#fef2f2;--red-2:#fee2e2;--purple:#7c3aed;--purple-l:#f5f3ff;--sidebar:#0f172a;--sidebar-hover:#1e293b;--gray:#6b7280;--gray-l:#f3f4f6;--border:#e5e7eb;--text:#111827;--white:#fff;--shadow:0 4px 24px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.14);--radius:16px;--radius-sm:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh;display:flex}
+#sidebar{width:230px;background:var(--sidebar);color:#fff;min-height:100vh;position:fixed;left:0;top:0;z-index:100;display:flex;flex-direction:column;transition:transform .3s}
+.sb-logo{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px}
+.sb-logo .ico{width:36px;height:36px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.sb-logo .t{font-size:14px;font-weight:800}.sb-logo .s{font-size:11px;color:rgba(255,255,255,.4);margin-top:1px}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.sb-sec{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1.2px;text-transform:uppercase;padding:12px 8px 6px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);transition:all .2s;margin-bottom:2px;text-decoration:none}
+.sb-item:hover,.sb-item.on{background:var(--sidebar-hover);color:#fff}
+.sb-item.on{background:var(--blue)!important}
+.sb-item .si{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sb-badge{background:var(--red);color:#fff;border-radius:20px;font-size:10px;font-weight:800;padding:2px 7px;margin-left:auto;min-width:20px;text-align:center}
+.sb-badge.amber{background:var(--amber)}
+.sb-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-user{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.sb-av{width:32px;height:32px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.sb-name{font-size:13px;font-weight:600}.sb-role{font-size:11px;color:rgba(255,255,255,.4)}
+.logout-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,.07);border-radius:8px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,.65);transition:background .2s;border:none;width:100%}
+.logout-btn:hover{background:var(--red);color:#fff}
+#main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 22px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.topbar-title{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.refresh-btn{padding:7px 13px;background:var(--gray-l);border:none;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--gray);display:flex;align-items:center;gap:5px;transition:all .2s}
+.refresh-btn:hover{background:var(--blue-l);color:var(--blue)}
+.mob-menu{display:none;background:none;border:none;font-size:22px;cursor:pointer}
+.content{padding:22px;flex:1}
+.view{display:none}.view.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view.on{animation:fadeIn .25s ease}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:13px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:14px;padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:-24px;right:-24px;width:80px;height:80px;border-radius:50%;opacity:.07}
+.stat-card.blue::after{background:var(--blue)}.stat-card.green::after{background:var(--green)}.stat-card.amber::after{background:var(--amber)}.stat-card.red::after{background:var(--red)}.stat-card.purple::after{background:var(--purple)}
+.sc-icon{font-size:26px;margin-bottom:8px}.sc-val{font-size:28px;font-weight:900}
+.stat-card.blue .sc-val{color:var(--blue)}.stat-card.green .sc-val{color:var(--green)}.stat-card.amber .sc-val{color:var(--amber)}.stat-card.red .sc-val{color:var(--red)}.stat-card.purple .sc-val{color:var(--purple)}
+.sc-lbl{font-size:12px;color:var(--gray);font-weight:500;margin-top:4px}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.search-inp{flex:1;min-width:140px;padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none}
+.search-inp:focus{border-color:var(--blue)}
+.filter-sel{padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;outline:none;background:#fff;cursor:pointer}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:10px 13px;text-align:left;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;border-bottom:2px solid var(--border);white-space:nowrap}
+tbody td{padding:11px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border:none}
+tbody tr:hover{background:#fafbff}
+.td-mono{font-family:monospace;font-size:12px}
+.badge{padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap;display:inline-block}
+.b-green{background:var(--green-l);color:var(--green)}.b-amber{background:var(--amber-l);color:#92400e}.b-red{background:var(--red-l);color:var(--red)}.b-blue{background:var(--blue-l);color:var(--blue)}.b-purple{background:var(--purple-l);color:var(--purple)}.b-gray{background:var(--gray-l);color:var(--gray)}
+.score-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800}
+.score-pill.high{background:var(--green-l);color:var(--green)}.score-pill.mid{background:var(--amber-l);color:#92400e}.score-pill.low{background:var(--red-l);color:var(--red)}
+.score-bar-mini{width:56px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:4px}
+.score-bar-mini-fill{height:100%;border-radius:3px}
+.flag-tag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:4px;background:var(--red-l);color:var(--red);border:1px solid var(--red-2);margin-right:3px;display:inline-block}
+.flag-tag.warn{background:var(--amber-l);color:#92400e;border-color:var(--amber-2)}
+.pay-row-review{background:#fffbeb!important}.pay-row-flag{background:#fef2f2!important}
+.btn{padding:7px 14px;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover:not(:disabled){background:#15803d}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover:not(:disabled){background:#b91c1c}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover:not(:disabled){background:var(--blue-d)}
+.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--gray)}.btn-ghost:hover{background:var(--gray-l)}
+.btn-sm{padding:5px 10px;font-size:12px}.btn-full{width:100%;justify-content:center;padding:11px}
+.btn-icon{padding:6px;border-radius:6px;background:var(--gray-l);border:none;cursor:pointer;font-size:14px;transition:all .2s}.btn-icon:hover{background:var(--border)}
+.fg{margin-bottom:13px}
+.fg label{display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;transition:all .2s;background:#fafafa;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.fg textarea{resize:vertical;min-height:60px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:14px}
+.modal-bg.on{display:flex}
+.modal{background:#fff;border-radius:20px;padding:26px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-size:17px;font-weight:800}
+.modal-close{cursor:pointer;font-size:22px;color:var(--gray);background:none;border:none;padding:0;line-height:1}
+.d-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.d-row:last-child{border:none}.d-key{color:var(--gray);width:45%}.d-val{font-weight:600;text-align:right;flex:1;word-break:break-all}
+.score-breakdown{background:var(--gray-l);border-radius:var(--radius-sm);padding:14px;margin:12px 0}
+.sb-title{font-size:11.5px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.sb-rule{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sb-rule:last-child{border:none}.sr-pts{font-weight:800;font-size:13px}.sr-pts.pass{color:var(--green)}.sr-pts.fail{color:var(--red)}
+.score-total-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:2px solid var(--border)}
+.score-total-val{font-size:24px;font-weight:900}
+.score-bar-wrap{margin-top:6px;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.fraud-section{background:var(--red-l);border:1px solid var(--red-2);border-radius:var(--radius-sm);padding:14px;margin-top:12px;display:none}
+.fraud-section.on{display:block}.fraud-title{font-weight:800;color:var(--red);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.fraud-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.fraud-list li{font-size:13px;color:#991b1b;display:flex;align-items:flex-start;gap:6px}
+.fraud-list li::before{content:'⚠';flex-shrink:0}
+.confirm-modal .cm-icon{font-size:46px;text-align:center;margin-bottom:12px}
+.confirm-modal .cm-title{font-size:18px;font-weight:800;text-align:center;margin-bottom:8px}
+.confirm-modal .cm-msg{font-size:13.5px;color:var(--gray);text-align:center;margin-bottom:18px;line-height:1.6}
+.reject-reason{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:inherit;margin-bottom:14px;resize:vertical;min-height:70px}
+.reject-reason:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.1)}
+.alert{padding:10px 13px;border-radius:8px;font-size:13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:7px}
+.alert.err{background:var(--red-l);color:var(--red);border:1px solid var(--red-2)}
+.spinner{display:inline-block;width:15px;height:15px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.spinner-dark{border:2.5px solid rgba(0,0,0,.1);border-top-color:var(--blue)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:48px 20px;color:var(--gray)}
+.empty-state .ei{font-size:46px;display:block;margin-bottom:12px}
+.donut-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.donut-wrap svg{transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.donut-val{font-size:18px;font-weight:900;line-height:1}.donut-lbl{font-size:9px;color:var(--gray);font-weight:600;margin-top:1px}
+.mini-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:22px 4px 0;overflow:visible}
+.mc-bar{flex:1;border-radius:6px 6px 0 0;position:relative;cursor:default;transition:opacity .2s;min-width:18px}
+.mc-bar:hover{opacity:.8}
+.mc-bar-lbl{text-align:center;font-size:10px;color:var(--gray);margin-top:4px}
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  .sidebar-open #sidebar{transform:translateX(0)}
+  #main{margin-left:0}
+  .mob-menu{display:block}
+  .content{padding:12px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .mini-chart{height:60px}
+  .modal{padding:16px}
+}
+/* ── Session Timer ───────────────────────────────────────── */
+.session-timer{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:var(--blue-l);color:var(--blue);border:1px solid #bfdbfe;transition:background .4s,color .4s,border-color .4s;white-space:nowrap}
+.session-timer.warn{background:#fffbeb;color:#92400e;border-color:#fcd34d}
+.session-timer.danger{background:#fef2f2;color:#dc2626;border-color:#fca5a5;animation:pulse-red 1.2s ease-in-out infinite}
+@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.6}}
+.session-modal{background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.session-modal .sm-icon{font-size:48px;margin-bottom:12px}
+.session-modal h3{font-size:18px;font-weight:700;margin-bottom:8px}
+.session-modal .sm-time{font-size:36px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums;margin:12px 0}
+.session-modal .sm-btns{display:flex;gap:10px;margin-top:20px;justify-content:center}
+.expired-overlay{position:fixed;inset:0;background:rgba(15,23,42,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.expired-card{background:#fff;border-radius:20px;padding:36px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.expired-card .ex-icon{font-size:56px;margin-bottom:16px}
+.expired-card h2{font-size:22px;font-weight:700;margin-bottom:8px}
+.expired-card p{font-size:14px;color:var(--gray);margin-bottom:20px;line-height:1.6}
+/* FIXED: Hide non-essential ledger table columns on mobile */
+@media(max-width:640px){.hide-mobile{display:none!important}}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90}.sidebar-open .overlay{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.modal{animation:slideUp .25s ease}
+</style>
+  <script src="/js/config.js"></script>
+  <script src="/js/api.js"></script>
+</head>
+<body>
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="ico">🖨️</div>
+    <div><div class="t">PrintShop Pro</div><div class="s">Admin · Payments</div></div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-sec">Navigation</div>
+    <div class="sb-item" onclick="window.location.href='/admin'"><span class="si">📊</span> Dashboard</div>
+    <div class="sb-item" onclick="window.location.href='/admin'"><span class="si">📦</span> All Orders</div>
+    <div class="sb-sec">Payments</div>
+    <div class="sb-item on" id="nav-ledger"    onclick="gotoView('ledger')">   <span class="si">💳</span> Payment Ledger   <span class="sb-badge amber" id="nb-review">0</span></div>
+    <div class="sb-item"    id="nav-fraud"     onclick="gotoView('fraud')">    <span class="si">🚨</span> Fraud Log         <span class="sb-badge" id="nb-fraud">0</span></div>
+    <div class="sb-item"    id="nav-analytics" onclick="gotoView('analytics')"><span class="si">📈</span> Analytics</div>
+  </div>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-av">A</div>
+      <div><div class="sb-name">Administrator</div><div class="sb-role">Super Admin</div></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="mob-menu" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="topbar-title">💳 Payment Ledger</div>
+    </div>
+    <div class="topbar-right">
+      <span id="last-update" style="font-size:12px;color:var(--gray)"></span>
+      <div class="session-timer" id="session-timer" title="Admin session expires in this time">
+        🔒 <span id="session-time">4:00:00</span>
+      </div>
+      <button class="refresh-btn" onclick="refreshView()">🔄 Refresh</button>
+    </div>
+  </div>
+
+  <!-- SESSION EXPIRY WARNING MODAL -->
+  <div class="modal-bg" id="modal-session-warn">
+    <div class="session-modal">
+      <div class="sm-icon">⏰</div>
+      <h3>Session Expiring Soon</h3>
+      <p>Your admin session will expire in</p>
+      <div class="sm-time" id="warn-countdown">10:00</div>
+      <p style="font-size:13px">Extend to keep working, or logout now.</p>
+      <div class="sm-btns">
+        <button class="btn btn-ghost" onclick="forceLogout()">Logout Now</button>
+        <button class="btn btn-blue" id="btn-extend" onclick="extendSession()">⟳ Extend 4 Hours</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION EXPIRED OVERLAY -->
+  <div class="expired-overlay" id="expired-overlay" style="display:none">
+    <div class="expired-card">
+      <div class="ex-icon">🔐</div>
+      <h2>Session Expired</h2>
+      <p>Your 4-hour admin session has ended.<br>Please login again to continue.</p>
+      <button class="btn btn-blue" style="width:100%;margin-top:4px" onclick="forceLogout()">Back to Login</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- LEDGER -->
+    <div class="view on" id="view-ledger">
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="sc-icon">💳</div><div class="sc-val" id="st-total">—</div><div class="sc-lbl">Total Payments</div></div>
+        <div class="stat-card green"><div class="sc-icon">✅</div><div class="sc-val" id="st-approved">—</div><div class="sc-lbl">Auto Approved</div></div>
+        <div class="stat-card amber"><div class="sc-icon">⏳</div><div class="sc-val" id="st-review">—</div><div class="sc-lbl">Needs Review</div></div>
+        <div class="stat-card red"><div class="sc-icon">❌</div><div class="sc-val" id="st-rejected">—</div><div class="sc-lbl">Auto Rejected</div></div>
+        <div class="stat-card purple"><div class="sc-icon">🚨</div><div class="sc-val" id="st-fraud">—</div><div class="sc-lbl">Fraud Flags</div></div>
+      </div>
+      <div class="toolbar">
+        <input class="search-inp" type="text" placeholder="🔍 Search order ID, email, UPI ref…" id="search-inp" oninput="filterLedger()">
+        <select class="filter-sel" id="f-auto" onchange="filterLedger()">
+          <option value="">All Auto Status</option>
+          <option>Auto Approved</option><option>Needs Review</option><option>Auto Rejected</option>
+        </select>
+        <select class="filter-sel" id="f-admin" onchange="filterLedger()">
+          <option value="">All Admin Status</option>
+          <option>Pending</option><option>Approved</option><option>Rejected</option>
+        </select>
+        <select class="filter-sel" id="f-score" onchange="filterLedger()">
+          <option value="">All Scores</option>
+          <option value="high">High (≥80)</option><option value="mid">Medium (50–79)</option><option value="low">Low (&lt;50)</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pay ID</th><th>Order ID</th><th class="hide-mobile">Email</th><th>UPI Ref</th><th>Entered</th><th class="hide-mobile">Expected</th><th>Score</th><th>Auto</th><th>Admin</th><th class="hide-mobile">Flags</th><th class="hide-mobile">Date</th><th>Actions</th></tr></thead>
+            <tbody id="ledger-tbody"><tr><td colspan="12" style="text-align:center;padding:40px;color:var(--gray)"><span class="spinner spinner-dark" style="width:24px;height:24px;display:inline-block;vertical-align:middle;margin-right:8px"></span>Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="ledger-empty" style="display:none"><span class="ei">💳</span><h3>No payments found</h3></div>
+      </div>
+    </div>
+
+    <!-- FRAUD LOG -->
+    <div class="view" id="view-fraud">
+      <div class="card" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:36px">🚨</span>
+          <div><div style="font-size:16px;font-weight:800;color:var(--red)">Fraud &amp; Suspicious Activity Log</div>
+          <div style="font-size:13px;color:#991b1b;margin-top:3px">All flagged transactions — review before approving any payment</div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Log ID</th><th>Order ID</th><th>UPI Ref</th><th>Reason</th><th>Flagged At</th></tr></thead>
+            <tbody id="fraud-tbody"><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray)"><span class="spinner spinner-dark" style="width:22px;height:22px;display:inline-block;vertical-align:middle;margin-right:8px"></span>Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="fraud-empty" style="display:none"><span class="ei">✅</span><h3>No fraud flags</h3><p>No suspicious activity detected</p></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="view" id="view-analytics">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:18px">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">⚡ Auto-Approval Rate</div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div class="donut-wrap">
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="32" fill="none" stroke="#e5e7eb" stroke-width="10"/>
+                <circle cx="40" cy="40" r="32" fill="none" stroke="#16a34a" stroke-width="10"
+                  stroke-dasharray="201" stroke-dashoffset="201" id="donut-fill" stroke-linecap="round"/>
+              </svg>
+              <div class="donut-center"><div class="donut-val" id="donut-pct" style="color:var(--green)">0%</div><div class="donut-lbl">Auto</div></div>
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="color:var(--green);font-weight:600">✅ Approved</span><span id="a-approved-cnt" style="font-weight:800">0</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="color:var(--amber);font-weight:600">⏳ Review</span><span id="a-review-cnt" style="font-weight:800">0</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0"><span style="color:var(--red);font-weight:600">❌ Rejected</span><span id="a-rejected-cnt" style="font-weight:800">0</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">📊 Score Distribution</div>
+          <div class="mini-chart" id="score-chart"><div style="color:var(--gray);font-size:13px;text-align:center;width:100%">Loading…</div></div>
+          <div style="display:flex;justify-content:center;gap:12px;margin-top:8px;font-size:11.5px">
+            <span style="color:var(--red)">■ Low(&lt;50)</span><span style="color:var(--amber)">■ Mid(50-79)</span><span style="color:var(--green)">■ High(≥80)</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px">🔢 Scoring Rules</div>
+          <div style="font-size:13px">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span>💰 Amount Matches</span><span style="font-weight:800;color:var(--green)">+40 pts</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span>🔢 UPI Ref ≥12 chars</span><span style="font-weight:800;color:var(--blue)">+30 pts</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span>📝 Note Confirmed</span><span style="font-weight:800;color:var(--purple)">+20 pts</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0"><span>📸 Screenshot</span><span style="font-weight:800;color:var(--amber)">+10 pts</span></div>
+            <div style="margin-top:12px;background:var(--gray-l);border-radius:8px;padding:10px;font-size:12px">
+              <div style="font-weight:800;margin-bottom:4px">Thresholds</div>
+              <div style="color:var(--green)">≥80 → Auto Approved ✅</div>
+              <div style="color:var(--amber);margin-top:2px">50–79 → Needs Review ⏳</div>
+              <div style="color:var(--red);margin-top:2px">&lt;50 → Auto Rejected ❌</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⏳ Awaiting Manual Review</div>
+          <span class="badge b-amber" id="pending-cnt">0 pending</span>
+        </div>
+        <div id="pending-list"><div class="empty-state" style="padding:30px"><span class="ei" style="font-size:36px">✅</span><p>No payments need manual review</p></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAYMENT DETAIL MODAL -->
+<div class="modal-bg" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="det-title">Payment Details</div>
+      <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+    </div>
+    <div id="det-body"></div>
+  </div>
+</div>
+
+<!-- APPROVE CONFIRM -->
+<div class="modal-bg" id="modal-approve">
+  <div class="modal confirm-modal" style="max-width:380px">
+    <div class="cm-icon">✅</div><div class="cm-title">Approve Payment?</div>
+    <div class="cm-msg" id="approve-msg">Mark order as PAID and move to Accepted. Email sent to customer.</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-full" onclick="closeModal('modal-approve')">Cancel</button>
+      <button class="btn btn-green btn-full" id="btn-approve-confirm" onclick="doApprove()">✅ Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-bg" id="modal-reject">
+  <div class="modal confirm-modal" style="max-width:400px">
+    <div class="cm-icon">❌</div><div class="cm-title">Reject Payment</div>
+    <div class="cm-msg">Provide a reason (sent to customer)</div>
+    <textarea class="reject-reason" id="reject-reason" placeholder="e.g. Amount mismatch — please pay the correct amount of ₹X"></textarea>
+    <div class="alert err" id="a-reject" style="display:none"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-full" onclick="closeModal('modal-reject')">Cancel</button>
+      <button class="btn btn-red btn-full" id="btn-reject-confirm" onclick="doReject()">❌ Reject</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SESS = JSON.parse(localStorage.getItem('ps_session') || 'null');
+if (!SESS || SESS.role !== 'admin') { window.location.href = '/'; }
+
+// Check expiry on load
+(function checkOnLoad() {
+  if (!SESS || !SESS.expiresAt) return;
+  if (new Date(SESS.expiresAt) < new Date()) {
+    localStorage.removeItem('ps_session');
+    window.location.href = '/';
+  }
+})();
+
+let allPayments  = [];
+let allFraudLogs = [];
+let globalStats  = {};
+let currentView  = 'ledger';
+let actionPayId  = '';
+let actionOrdId  = '';
+let _sessionTimerInterval = null;
+let _warnModalOpen        = false;
+const esc = v => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// ── 4-Hour Session Timer ───────────────────────────────────
+function startSessionTimer() {
+  if (_sessionTimerInterval) clearInterval(_sessionTimerInterval);
+  if (!SESS.expiresAt) {
+    SESS.expiresAt = new Date(Date.now() + 4 * 3600000).toISOString();
+    localStorage.setItem('ps_session', JSON.stringify(SESS));
+  }
+  const expiresAt = new Date(SESS.expiresAt);
+  const tick = () => {
+    const rem     = expiresAt - Date.now();
+    const timerEl = document.getElementById('session-timer');
+    const timeEl  = document.getElementById('session-time');
+    if (rem <= 0) {
+      clearInterval(_sessionTimerInterval);
+      if (timeEl)  timeEl.textContent = '0:00:00';
+      if (timerEl) timerEl.className  = 'session-timer danger';
+      showExpiredOverlay();
+      return;
+    }
+    const h = Math.floor(rem / 3600000);
+    const m = Math.floor((rem % 3600000) / 60000);
+    const s = Math.floor((rem % 60000) / 1000);
+    if (timeEl)  timeEl.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (timerEl) {
+      if      (rem < 5 * 60000)  timerEl.className = 'session-timer danger';
+      else if (rem < 15 * 60000) timerEl.className = 'session-timer warn';
+      else                       timerEl.className = 'session-timer';
+    }
+    // BUG FIX: simple check — no narrow window that can be missed in background tabs
+    if (rem < 10 * 60000 && !_warnModalOpen) openSessionWarnModal();
+    if (_warnModalOpen) {
+      const wm = Math.floor(rem / 60000);
+      const ws = Math.floor((rem % 60000) / 1000);
+      const wEl = document.getElementById('warn-countdown');
+      if (wEl) wEl.textContent = `${wm}:${String(ws).padStart(2,'0')}`;
+    }
+  };
+  tick();
+  _sessionTimerInterval = setInterval(tick, 1000);
+}
+
+function openSessionWarnModal() {
+  _warnModalOpen = true;
+  document.getElementById('modal-session-warn').classList.add('on');
+}
+
+function showExpiredOverlay() {
+  document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('on'));
+  _warnModalOpen = false;
+  document.getElementById('expired-overlay').style.display = 'flex';
+}
+
+function extendSession() {
+  const btn = document.getElementById('btn-extend');
+  btn.disabled = true; btn.textContent = '⏳ Extending…';
+  google.script.run
+    .withSuccessHandler(r => {
+      btn.disabled = false; btn.textContent = '⟳ Extend 4 Hours';
+      if (r.ok) {
+        SESS.expiresAt = r.expiresAt;
+        localStorage.setItem('ps_session', JSON.stringify(SESS));
+        document.getElementById('modal-session-warn').classList.remove('on');
+        _warnModalOpen = false;
+        startSessionTimer();
+        toast('✅ Session extended by 4 hours');
+      } else { toast('❌ Could not extend — please login again', true); setTimeout(forceLogout, 2500); }
+    })
+    .withFailureHandler(() => { btn.disabled = false; btn.textContent = '⟳ Extend 4 Hours'; toast('❌ Extend failed', true); })
+    .refreshAdminSession(SESS.token);
+}
+
+function forceLogout() {
+  clearInterval(_sessionTimerInterval);
+  localStorage.removeItem('ps_session');
+  window.location.href = '/home';
+}
+
+function logout() { forceLogout(); }
+function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+function openModal(id)  { document.getElementById(id).classList.add('on'); }
+function closeModal(id) { document.getElementById(id).classList.remove('on'); }
+function fmtDate(iso)   { if (!iso) return '—'; return new Date(iso).toLocaleString('en-IN',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function setLastUpdate(){ document.getElementById('last-update').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function setSpinner(id, loading) {
+  const btn = document.getElementById(id); if (!btn) return;
+  btn.disabled = loading;
+  if (loading) { btn.dataset.orig = btn.innerHTML; btn.innerHTML = '<span class="spinner"></span>'; }
+  else btn.innerHTML = btn.dataset.orig || btn.innerHTML;
+}
+
+const viewTitles = { ledger:'💳 Payment Ledger', fraud:'🚨 Fraud Log', analytics:'📈 Analytics' };
+function gotoView(v) {
+  currentView = v;
+  ['ledger','fraud','analytics'].forEach(id => {
+    document.getElementById('view-' + id).classList.toggle('on', id === v);
+    const n = document.getElementById('nav-' + id); if (n) n.classList.toggle('on', id === v);
+  });
+  document.getElementById('topbar-title').textContent = viewTitles[v] || v;
+  document.body.classList.remove('sidebar-open');
+  if (v === 'fraud')     loadFraudLog();
+  if (v === 'analytics') renderAnalytics();
+}
+function refreshView() {
+  if (currentView === 'ledger')    loadLedger();
+  else if (currentView === 'fraud')loadFraudLog();
+  else                             loadLedger();
+}
+
+// ── LOAD LEDGER ────────────────────────────────────────────
+function loadLedger() {
+  document.getElementById('ledger-tbody').innerHTML =
+    '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--gray)"><span class="spinner spinner-dark" style="width:24px;height:24px;display:inline-block;vertical-align:middle;margin-right:8px"></span>Loading…</td></tr>';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) { document.getElementById('ledger-tbody').innerHTML = `<tr><td colspan="12" style="color:var(--red);padding:20px">${r.err}</td></tr>`; return; }
+      allPayments = r.payments || [];
+      globalStats = r.stats   || {};
+      updateStats(globalStats);
+      renderLedger(allPayments);
+      setLastUpdate();
+      // FIXED: if user navigated directly to Analytics before ledger loaded,
+      // re-render analytics now that data is available
+      if (currentView === 'analytics') renderAnalytics();
+    })
+    .withFailureHandler(e => { document.getElementById('ledger-tbody').innerHTML = `<tr><td colspan="12" style="color:var(--red);padding:20px">Error: ${e.message}</td></tr>`; })
+    .adminGetPaymentLedger(SESS.token);
+}
+
+function updateStats(s) {
+  document.getElementById('st-total').textContent    = s.total        || 0;
+  document.getElementById('st-approved').textContent = s.autoApproved || 0;
+  document.getElementById('st-review').textContent   = s.needsReview  || 0;
+  document.getElementById('st-rejected').textContent = s.autoRejected || 0;
+  document.getElementById('st-fraud').textContent    = s.fraudFlags   || 0;
+  document.getElementById('nb-review').textContent   = s.adminPending || 0;
+  document.getElementById('nb-fraud').textContent    = s.fraudFlags   || 0;
+}
+
+// ── RENDER LEDGER ──────────────────────────────────────────
+function renderLedger(pays) {
+  const tbody = document.getElementById('ledger-tbody');
+  const empty = document.getElementById('ledger-empty');
+  if (!pays.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = pays.map(p => {
+    // FIX: use String() cast for all comparisons against sheet values
+    const score     = parseInt(p.score) || 0;
+    const scoreCls  = score >= 80 ? 'high' : score >= 50 ? 'mid' : 'low';
+    const scoreFill = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--amber)' : 'var(--red)';
+    const ordAmt    = p.order ? parseFloat(p.order.total_price || 0) : 0;
+    const entAmt    = parseFloat(p.entered_amount || 0);
+    const amtMatch  = ordAmt > 0 && Math.abs(entAmt - ordAmt) < 0.01;
+    const isFlagged = p.isFraud || (String(p.fraud_flags || '').trim().length > 0);
+    const rowCls    = isFlagged ? 'pay-row-flag' : (String(p.auto_status) === 'Needs Review' ? 'pay-row-review' : '');
+    const ordEmail  = p.order ? (p.order.user_email || '—') : '—';
+    return `<tr class="${rowCls}">
+      <td class="td-mono" style="font-size:11px">${esc(String(p.payment_id||'').slice(0,18))}</td>
+      <td class="td-mono" style="cursor:pointer;color:var(--blue)" onclick="showDetail('${esc(p.payment_id)}')">${esc(p.order_id||'—')}</td>
+      <td class="hide-mobile" style="font-size:12px">${esc(ordEmail)}</td>
+      <td class="td-mono">${esc(p.upi_ref||'—')}</td>
+      <td style="font-weight:700;color:${amtMatch?'var(--green)':'var(--red)'}">₹${entAmt.toFixed(2)} ${amtMatch?'✓':'✗'}</td>
+      <td class="hide-mobile" style="font-size:12px">₹${ordAmt.toFixed(2)}</td>
+      <td><div style="display:flex;align-items:center;gap:5px"><span class="score-pill ${scoreCls}">${score}</span><div class="score-bar-mini"><div class="score-bar-mini-fill" style="width:${score}%;background:${scoreFill}"></div></div></div></td>
+      <td>${autoB(p.auto_status)}</td>
+      <td>${adminB(p.admin_status)}</td>
+      <td class="hide-mobile">${isFlagged?'<span class="flag-tag">🚨 Flagged</span>':''}${!amtMatch?'<span class="flag-tag warn">Amt✗</span>':''}${String(p.note_confirmed||'')!=='Yes'?'<span class="flag-tag warn">Note✗</span>':''}</td>
+      <td class="hide-mobile" style="font-size:11.5px;white-space:nowrap">${fmtDate(p.submitted_at)}</td>
+      <td><div style="display:flex;gap:3px;flex-wrap:wrap">
+        <button class="btn-icon" onclick="showDetail('${esc(p.payment_id)}')">👁</button>
+        ${p.screenshot_url?`<a href="${esc(p.screenshot_url)}" target="_blank" rel="noopener" class="btn-icon">📸</a>`:''}
+        ${String(p.admin_status||'') === 'Pending'
+          ? `<button class="btn btn-green btn-sm" onclick="openApprove('${esc(p.payment_id)}','${esc(p.order_id||'')}')">✓</button><button class="btn btn-red btn-sm" onclick="openReject('${esc(p.payment_id)}','${esc(p.order_id||'')}')">✕</button>`
+          : `<span class="badge ${String(p.admin_status||'')==='Approved'?'b-green':'b-red'}" style="font-size:10px">${esc(p.admin_status)}</span>`}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterLedger() {
+  const q=document.getElementById('search-inp').value.toLowerCase();
+  const fA=document.getElementById('f-auto').value;
+  const fD=document.getElementById('f-admin').value;
+  const fS=document.getElementById('f-score').value;
+  renderLedger(allPayments.filter(p => {
+    const mq = !q || String(p.payment_id||'').toLowerCase().includes(q)||String(p.order_id||'').toLowerCase().includes(q)||String(p.upi_ref||'').toLowerCase().includes(q)||((p.order&&p.order.user_email)||'').toLowerCase().includes(q);
+    const ma = !fA || String(p.auto_status||'')  === fA;
+    const md = !fD || String(p.admin_status||'') === fD;
+    const sc = parseInt(p.score)||0;
+    const ms = !fS||(fS==='high'&&sc>=80)||(fS==='mid'&&sc>=50&&sc<80)||(fS==='low'&&sc<50);
+    return mq&&ma&&md&&ms;
+  }));
+}
+
+// ── DETAIL MODAL ───────────────────────────────────────────
+function showDetail(payId) {
+  const p = allPayments.find(x => x.payment_id === payId); if (!p) return;
+  const score    = parseInt(p.score)||0;
+  const scoreClr = score>=80?'var(--green)':score>=50?'var(--amber)':'var(--red)';
+  const ordAmt   = p.order ? parseFloat(p.order.total_price||0) : 0;
+  const entAmt   = parseFloat(p.entered_amount||0);
+  const amtMatch = ordAmt>0 && Math.abs(entAmt-ordAmt)<0.01;
+  const refLen   = String(p.upi_ref||'').trim().length;
+  const hasNote  = String(p.note_confirmed||'') === 'Yes';
+  const hasSS    = !!(p.screenshot_url);
+  const flags    = String(p.fraud_flags||'').trim();
+  const isFlagged= p.isFraud||flags.length>0;
+  document.getElementById('det-title').textContent = 'Payment — ' + payId;
+  document.getElementById('det-body').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;background:var(--gray-l);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="text-align:center;flex-shrink:0">
+        <div style="font-size:38px;font-weight:900;color:${scoreClr};line-height:1">${score}</div>
+        <div style="font-size:11px;color:var(--gray);margin-top:2px">/ 100 pts</div>
+        <div class="score-bar-wrap" style="width:80px;margin-top:6px"><div class="score-bar-fill" style="width:${score}%;background:${scoreClr}"></div></div>
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:800;margin-bottom:6px">Verification Score</div>
+        <div>${autoB(p.auto_status)} ${adminB(p.admin_status)}</div>
+        ${isFlagged?'<div style="margin-top:8px"><span class="flag-tag">🚨 Flagged</span></div>':''}
+      </div>
+    </div>
+    <div class="score-breakdown">
+      <div class="sb-title">📊 Score Breakdown</div>
+      <div class="sb-rule"><span>${amtMatch?'✅':'❌'} Amount: ₹${entAmt.toFixed(2)} vs expected ₹${ordAmt.toFixed(2)}</span><span class="sr-pts ${amtMatch?'pass':'fail'}">${amtMatch?'+40':'+0'}</span></div>
+      <div class="sb-rule"><span>${refLen>=12?'✅':'❌'} UPI Ref: ${refLen} characters</span><span class="sr-pts ${refLen>=12?'pass':'fail'}">${refLen>=12?'+30':'+0'}</span></div>
+      <div class="sb-rule"><span>${hasNote?'✅':'❌'} Note confirmed by user</span><span class="sr-pts ${hasNote?'pass':'fail'}">${hasNote?'+20':'+0'}</span></div>
+      <div class="sb-rule"><span>${hasSS?'✅':'❌'} Screenshot uploaded</span><span class="sr-pts ${hasSS?'pass':'fail'}">${hasSS?'+10':'+0'}</span></div>
+      <div class="score-total-row"><span style="font-weight:700">Total</span><span class="score-total-val" style="color:${scoreClr}">${score}/100</span></div>
+      <div class="score-bar-wrap" style="margin-top:6px"><div class="score-bar-fill" style="width:${score}%;background:${scoreClr}"></div></div>
+    </div>
+    <div class="d-row"><span class="d-key">Payment ID</span><span class="d-val td-mono">${esc(p.payment_id||'—')}</span></div>
+    <div class="d-row"><span class="d-key">Order ID</span><span class="d-val td-mono">${esc(p.order_id||'—')}</span></div>
+    <div class="d-row"><span class="d-key">UPI Reference</span><span class="d-val td-mono" style="font-weight:800">${esc(p.upi_ref||'—')}</span></div>
+    <div class="d-row"><span class="d-key">Amount Entered</span><span class="d-val" style="color:${amtMatch?'var(--green)':'var(--red)'}">₹${entAmt.toFixed(2)} ${amtMatch?'✓ Match':'✗ Mismatch'}</span></div>
+    <div class="d-row"><span class="d-key">Order Amount</span><span class="d-val">₹${ordAmt.toFixed(2)}</span></div>
+    <div class="d-row"><span class="d-key">Note Confirmed</span><span class="d-val">${hasNote?'<span style="color:var(--green)">Yes ✓</span>':'<span style="color:var(--red)">No ✗</span>'}</span></div>
+    <div class="d-row"><span class="d-key">Screenshot</span><span class="d-val">${hasSS?`<a href="${esc(p.screenshot_url)}" target="_blank" rel="noopener" style="color:var(--blue)">📸 View</a>`:'Not uploaded'}</span></div>
+    <div class="d-row"><span class="d-key">Customer</span><span class="d-val">${esc(p.order?p.order.user_email||'—':'—')}</span></div>
+    <div class="d-row"><span class="d-key">Submitted</span><span class="d-val">${fmtDate(p.submitted_at)}</span></div>
+    ${p.reviewed_at?`<div class="d-row"><span class="d-key">Reviewed</span><span class="d-val">${fmtDate(p.reviewed_at)} by ${p.reviewed_by||'Admin'}</span></div>`:''}
+    <div class="fraud-section ${isFlagged?'on':''}">
+      <div class="fraud-title">🚨 Fraud Flags</div>
+      <ul class="fraud-list">${flags?flags.split(',').map(f=>`<li>${f.trim()}</li>`).join(''):'<li>Flagged by system</li>'}</ul>
+    </div>
+    ${String(p.admin_status||'')==='Pending'
+      ?`<div style="display:flex;gap:10px;margin-top:18px">
+          <button class="btn btn-green btn-full" onclick="closeModal('modal-detail');openApprove('${p.payment_id}','${p.order_id||''}')">✅ Approve</button>
+          <button class="btn btn-red btn-full"   onclick="closeModal('modal-detail');openReject('${p.payment_id}','${p.order_id||''}')">❌ Reject</button>
+        </div>`
+      :`<div style="margin-top:16px;text-align:center"><span class="badge ${String(p.admin_status||'')==='Approved'?'b-green':'b-red'}" style="font-size:13px;padding:6px 14px">${String(p.admin_status||'')==='Approved'?'✅ Approved':'❌ Rejected'}</span></div>`}
+  `;
+  openModal('modal-detail');
+}
+
+// ── APPROVE / REJECT ───────────────────────────────────────
+function openApprove(payId, ordId) {
+  actionPayId=payId; actionOrdId=ordId;
+  const p=allPayments.find(x=>x.payment_id===payId);
+  document.getElementById('approve-msg').textContent =
+    `Approve payment ${payId}?${p&&p.order?' Amount: ₹'+p.order.total_price+'.':''} Marks order as PAID and sends confirmation email to customer.`;
+  openModal('modal-approve');
+}
+function doApprove() {
+  setSpinner('btn-approve-confirm', true);
+  google.script.run
+    .withSuccessHandler(r => {
+      setSpinner('btn-approve-confirm', false);
+      closeModal('modal-approve');
+      if (r.ok) { toast('✅ Payment approved!'); loadLedger(); }
+      else toast('❌ ' + r.err, true);
+    })
+    .withFailureHandler(e => { setSpinner('btn-approve-confirm',false); toast('❌ '+e.message,true); })
+    .adminApprovePayment(actionPayId, actionOrdId, SESS.token);
+}
+
+function openReject(payId, ordId) {
+  actionPayId=payId; actionOrdId=ordId;
+  document.getElementById('reject-reason').value='';
+  document.getElementById('a-reject').style.display='none';
+  openModal('modal-reject');
+}
+function doReject() {
+  const reason=document.getElementById('reject-reason').value.trim();
+  if (!reason) { const a=document.getElementById('a-reject'); a.textContent='⚠️ Please provide a rejection reason.'; a.style.display='flex'; return; }
+  setSpinner('btn-reject-confirm', true);
+  google.script.run
+    .withSuccessHandler(r => {
+      setSpinner('btn-reject-confirm', false);
+      closeModal('modal-reject');
+      if (r.ok) { toast('Payment rejected.'); loadLedger(); }
+      else toast('❌ '+r.err, true);
+    })
+    .withFailureHandler(e => { setSpinner('btn-reject-confirm',false); toast('❌ '+e.message,true); })
+    .adminRejectSmartPayment(actionPayId, actionOrdId, reason, SESS.token);
+}
+
+// ── FRAUD LOG ──────────────────────────────────────────────
+function loadFraudLog() {
+  document.getElementById('fraud-tbody').innerHTML =
+    '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray)"><span class="spinner spinner-dark" style="width:22px;height:22px;display:inline-block;vertical-align:middle;margin-right:8px"></span>Loading…</td></tr>';
+  google.script.run
+    .withSuccessHandler(r => {
+      if (!r.ok) return;
+      allFraudLogs = r.logs || [];
+      renderFraudLog(allFraudLogs); setLastUpdate();
+    })
+    .withFailureHandler(() => {})
+    .adminGetFraudLog(SESS.token);
+}
+function renderFraudLog(logs) {
+  const tbody=document.getElementById('fraud-tbody'), empty=document.getElementById('fraud-empty');
+  if (!logs.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const clrMap = { DUPLICATE:'var(--red)', LOW_SCORE:'var(--amber)', ADMIN_REJECTED:'var(--purple)', AMOUNT_MISMATCH:'var(--amber)', SHORT_UPI:'var(--gray)' };
+  tbody.innerHTML = logs.map(l => {
+    const key=Object.keys(clrMap).find(k=>String(l.reason||'').toUpperCase().includes(k))||'';
+    return `<tr style="background:#fef2f2">
+      <td class="td-mono" style="font-size:11px">${esc(l.log_id||'—')}</td>
+      <td class="td-mono">${esc(l.order_id||'—')}</td>
+      <td class="td-mono">${esc(l.upi_ref||'—')}</td>
+      <td><span style="color:${clrMap[key]||'var(--gray)'};font-weight:700;font-size:12.5px">⚠ ${esc(l.reason||'—')}</span></td>
+      <td style="font-size:12px;white-space:nowrap">${fmtDate(l.created_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────
+function renderAnalytics() {
+  if (!allPayments.length) { loadLedger(); return; }
+  const s=globalStats, total=Math.max(s.total||1,1);
+  const pct=Math.round(((s.autoApproved||0)/total)*100);
+  const circ=2*Math.PI*32;
+  document.getElementById('donut-fill').style.strokeDashoffset = circ-(pct/100)*circ;
+  document.getElementById('donut-pct').textContent   = pct+'%';
+  document.getElementById('a-approved-cnt').textContent = s.autoApproved||0;
+  document.getElementById('a-review-cnt').textContent   = s.needsReview ||0;
+  document.getElementById('a-rejected-cnt').textContent = s.autoRejected||0;
+  // Score bins
+  const bins=[{l:'0-19',min:0,max:19,c:'var(--red)',n:0},{l:'20-39',min:20,max:39,c:'#f87171',n:0},{l:'40-49',min:40,max:49,c:'var(--amber)',n:0},{l:'50-59',min:50,max:59,c:'#fbbf24',n:0},{l:'60-79',min:60,max:79,c:'#34d399',n:0},{l:'80-89',min:80,max:89,c:'var(--green)',n:0},{l:'90+',min:90,max:100,c:'#065f46',n:0}];
+  allPayments.forEach(p=>{const sc=parseInt(p.score)||0;const b=bins.find(b=>sc>=b.min&&sc<=b.max);if(b)b.n++;});
+  const mx=Math.max(...bins.map(b=>b.n),1);
+  document.getElementById('score-chart').innerHTML = bins.map(b=>
+    `<div style="display:flex;flex-direction:column;align-items:center;flex:1">
+      <div class="mc-bar" style="height:${Math.max(8,(b.n/mx)*100)}%;background:${b.c}" title="${b.n} payments">
+        ${b.n>0?`<div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:${b.c}">${b.n}</div>`:''}
+      </div><div class="mc-bar-lbl">${b.l}</div>
+    </div>`).join('');
+  // Pending review
+  const pending=allPayments.filter(p=>String(p.admin_status||'')==='Pending');
+  document.getElementById('pending-cnt').textContent = pending.length+' pending';
+  const pList=document.getElementById('pending-list');
+  if (!pending.length) { pList.innerHTML='<div class="empty-state" style="padding:30px"><span class="ei" style="font-size:36px">✅</span><p>No payments need review</p></div>'; return; }
+  pList.innerHTML = pending.map(p=>{
+    const sc=parseInt(p.score)||0, amt=p.order?'₹'+p.order.total_price:'—';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:14px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-weight:700;font-size:14px">${p.order_id||'—'}</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:2px">Ref: <span style="font-family:monospace">${p.upi_ref||'—'}</span> · ${p.order?p.order.user_email||'—':'—'}</div>
+        <div style="font-size:12px;margin-top:3px">Score: <span class="score-pill ${sc>=80?'high':sc>=50?'mid':'low'}" style="font-size:11px">${sc}/100</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div style="font-size:18px;font-weight:900;color:var(--blue)">${amt}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="showDetail('${p.payment_id}')">👁 Detail</button>
+          <button class="btn btn-green btn-sm" onclick="openApprove('${p.payment_id}','${p.order_id||''}')">✓</button>
+          <button class="btn btn-red btn-sm"   onclick="openReject('${p.payment_id}','${p.order_id||''}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Badge helpers ─────────────────────────────────────────
+function autoB(s) {
+  const m={'Auto Approved':'b-green','Needs Review':'b-amber','Auto Rejected':'b-red'};
+  return `<span class="badge ${m[String(s||'')]||'b-gray'}">${s||'—'}</span>`;
+}
+function adminB(s) {
+  const m={'Pending':'b-amber','Approved':'b-green','Rejected':'b-red'};
+  return `<span class="badge ${m[String(s||'')]||'b-gray'}">${s||'—'}</span>`;
+}
+
+function toast(msg, isErr=false) {
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:${isErr?'var(--red)':'#0f172a'};color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:slideUp .3s ease;max-width:300px`;
+  t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3500);
+}
+
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('on');});
+});
+startSessionTimer();
+loadLedger();
+</script>
+</body>
+</html>
